@@ -1,8 +1,8 @@
 /* GENERAL PAGE STYLES */
 body {
-  background-color: #121212;
+  background-color: #141414;
   color: white;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   margin: 0;
   padding: 0;
 }
@@ -12,41 +12,49 @@ header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: #121212;
-  padding: 18px 40px;
+  background-color: #141414;
+  padding: 10px 60px;
   height: 90px;
-  border-bottom: 2px solid #e50914; /* 🔥 Red accent line */
+  border-bottom: 2px solid #a00;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
 
 /* Left side of header */
 .nav-left {
   display: flex;
   align-items: center;
-  gap: 40px;
+  gap: 50px;
 }
 
 .logo {
-  font-size: 2rem;
-  font-weight: bold;
+  font-size: 2.8rem;
+  font-weight: 700;
   color: white;
+  user-select: none;
 }
 
-.logo span {
-  color: #e50914; /* “Book” in red */
+.logo .book {
+  color: #e50914; /* "Book" in red */
+}
+
+.logo .ify {
+  color: #fff; /* "ify" in white */
 }
 
 /* Nav links */
 .nav-links {
   display: flex;
-  gap: 30px;
+  gap: 35px;
 }
 
 .nav-links a {
   color: white;
-  font-size: 1.1rem;
+  font-size: 1.3rem;
   text-decoration: none;
   font-weight: 600;
-  transition: color 0.3s;
+  transition: color 0.3s ease;
 }
 
 .nav-links a:hover {
@@ -57,14 +65,14 @@ header {
 .header-icons {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 40px;
 }
 
 .header-icons i {
-  font-size: 1.6rem;
+  font-size: 1.8rem;
   color: white;
   cursor: pointer;
-  transition: color 0.3s;
+  transition: color 0.3s ease;
 }
 
 .header-icons i:hover {
@@ -116,15 +124,41 @@ header {
   border-radius: 8px;
   margin-top: 25px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
 }
 
 .add-shelf-btn:hover {
-  background-color: #c00;
+  background-color: #f40612;
+  box-shadow: 0 6px 20px rgba(229, 9, 20, 0.5);
+  transform: translateY(-2px);
+}
+
+.add-shelf-btn:active {
+  transform: translateY(0);
 }
 
 /* Responsive adjustments */
 @media (max-width: 900px) {
+  header {
+    padding: 10px 30px;
+  }
+
+  .logo {
+    font-size: 2.2rem;
+  }
+
+  .nav-links {
+    gap: 20px;
+  }
+
+  .nav-links a {
+    font-size: 1.1rem;
+  }
+
   .book-detail-container {
     flex-direction: column;
     align-items: center;
