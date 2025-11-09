@@ -82,10 +82,18 @@ Object.keys(bookData).forEach(category => {
         <img src="${book.img}" alt="${book.title}">
         <p>${book.title}</p>
       `;
+
+      // 👇 Add click event here
+      div.addEventListener('click', () => {
+        localStorage.setItem('selectedBook', JSON.stringify(book));
+        window.location.href = 'book.html';
+      });
+
       container.appendChild(div);
     });
   }
 });
+
 
 // Scroll functionality
 document.querySelectorAll('.row-container').forEach(container => {
@@ -130,4 +138,24 @@ sidebarButtons.forEach(button => {
     }
   });
 });
+
+// Example: inside your book row creation
+bookData[category].forEach(book => {
+  const bookDiv = document.createElement('div');
+  bookDiv.classList.add('book');
+  bookDiv.innerHTML = `
+    <img src="${book.img}" alt="${book.title}">
+    <p>${book.title}</p>
+  `;
+
+
+  // 👇 Add this event listener
+  bookDiv.addEventListener('click', () => {
+    localStorage.setItem('selectedBook', JSON.stringify(book));
+    window.location.href = 'book.html';
+  });
+
+  row.appendChild(bookDiv);
+});
+
 
