@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bookify – Browse Books</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="left-section">
+      <h1 class="logo">
+        <span class="book">Book</span><span class="ify">ify</span>
+      </h1>
+      <nav>
+        <a href="#">Home</a>
+        <a href="#">My Shelf</a>
+      </nav>
+    </div>
+
+    <div class="right-section">
+      <i class="fas fa-search"></i>
+      <i class="fas fa-user-circle"></i>
+    </div>
+  </header>
+
+  <aside class="sidebar">
+    <button data-filter="suggested"><i class="fas fa-star"></i> Suggested</button>
+    <button data-filter="fantasy"><i class="fas fa-hat-wizard"></i> Fantasy</button>
+    <button data-filter="horror"><i class="fas fa-ghost"></i> Horror</button>
+    <button data-filter="romance"><i class="fas fa-heart"></i> Romance</button>
+    <button data-filter="mystery"><i class="fas fa-search"></i> Mystery</button>
+    <button data-filter="scifi"><i class="fas fa-rocket"></i> Sci-Fi</button>
+    <button data-filter="nonfiction"><i class="fas fa-book"></i> Non-Fiction</button>
+  </aside>
+
+
+
+  <!-- MAIN CONTENT -->
+  <main>
+    <!-- Suggested Books -->
+    <section class="category">
+      <h2><span>Suggested</span> <span>Books</span></h2>
+      <div class="row-container">
+        <button class="scroll-left"><i class="fas fa-chevron-left"></i></button>
+        <div class="book-row" id="suggested"></div>
+        <button class="scroll-right"><i class="fas fa-chevron-right"></i></button>
+      </div>
+    </section>
+
+    <!-- Fantasy -->
+    <section class="category">
+      <h2><span>Fantasy</span> <span>Worlds</span></h2>
+      <div class="row-container">
+        <button class="scroll-left"><i class="fas fa-chevron-left"></i></button>
+        <div class="book-row" id="fantasy"></div>
+        <button class="scroll-right"><i class="fas fa-chevron-right"></i></button>
+      </div>
+    </section>
+
+    <!-- Horror -->
+    <section class="category">
+      <h2><span>Horror</span> <span>Stories</span></h2>
+      <div class="row-container">
+        <button class="scroll-left"><i class="fas fa-chevron-left"></i></button>
+        <div class="book-row" id="horror"></div>
+        <button class="scroll-right"><i class="fas fa-chevron-right"></i></button>
+      </div>
+    </section>
+
+    <!-- Romance -->
+    <section class="category">
+      <h2><span>Romance</span> <span>Reads</span></h2>
+      <div class="row-container">
+        <button class="scroll-left"><i class="fas fa-chevron-left"></i></button>
+        <div class="book-row" id="romance"></div>
+        <button class="scroll-right"><i class="fas fa-chevron-right"></i></button>
+      </div>
+    </section>
+
+    <!-- Mystery -->
+    <section class="category">
+      <h2><span>Mystery</span> <span>Thrillers</span></h2>
+      <div class="row-container">
+        <button class="scroll-left"><i class="fas fa-chevron-left"></i></button>
+        <div class="book-row" id="mystery"></div>
+        <button class="scroll-right"><i class="fas fa-chevron-right"></i></button>
+      </div>
+    </section>
+
+    <!-- Sci-Fi -->
+    <section class="category">
+      <h2><span>Sci-Fi</span> <span>Adventures</span></h2>
+      <div class="row-container">
+        <button class="scroll-left"><i class="fas fa-chevron-left"></i></button>
+        <div class="book-row" id="scifi"></div>
+        <button class="scroll-right"><i class="fas fa-chevron-right"></i></button>
+      </div>
+    </section>
+
+    <!-- Non-Fiction -->
+    <section class="category">
+      <h2><span>Non-Fiction</span> <span>Reads</span></h2>
+      <div class="row-container">
+        <button class="scroll-left"><i class="fas fa-chevron-left"></i></button>
+        <div class="book-row" id="nonfiction"></div>
+        <button class="scroll-right"><i class="fas fa-chevron-right"></i></button>
+      </div>
+    </section>
+  </main>
+
+  <!-- SCRIPT -->
+  <script src="script.js"></script>
+
+</body>
+</html>

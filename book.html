@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Book Details | Bookify</title>
+  <link rel="stylesheet" href="book.css">
+  <script src="https://kit.fontawesome.com/a2d9d6a52a.js" crossorigin="anonymous"></script>
+</head>
+<body>
+  <header>
+  <div class="logo">
+    <span class="red">Book</span><span class="white">ify</span>
+  </div>
+  <nav class="nav-links">
+    <a href="home.html">Home</a>
+    <a href="#">MyShelf</a>
+  </nav>
+  <div class="header-icons">
+    <input type="text" placeholder="Search books..." class="search-bar" />
+    <i class="fas fa-search"></i>
+    <i class="fas fa-user"></i>
+  </div>
+</header>
+
+
+  <!-- 🔵 MAIN CONTENT -->
+  <main class="book-detail">
+    <div class="book-info">
+      <img id="book-image" src="" alt="Book Cover">
+      <div class="details">
+        <h2 id="book-title"></h2>
+        <p id="book-description">Loading description...</p>
+        <button id="back-btn">← Back to Browse</button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const book = JSON.parse(localStorage.getItem('selectedBook'));
+
+    if (book) {
+      document.getElementById('book-image').src = book.img;
+      document.getElementById('book-title').textContent = book.title;
+      document.getElementById('book-description').textContent =
+        book.description || "This is one of our featured books! Dive in and enjoy the story.";
+    }
+
+    document.getElementById('back-btn').addEventListener('click', () => {
+      window.location.href = 'home.html';
+    });
+  </script>
+</body>
+</html>
