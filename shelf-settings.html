@@ -10,33 +10,41 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <!-- Header with breadcrumb-style navigation -->
+  <!-- Header with persistent navigation -->
   <header>
     <div class="left-section">
       <h1 class="logo">
-        <a href="shelf.html" style="text-decoration: none; color: inherit;">
+        <a href="home.html" style="text-decoration: none; color: inherit;">
           <span class="book">Book</span><span class="ify">ify</span>
         </a>
       </h1>
-      <nav class="breadcrumb-nav">
-        <span>Custom Playlist #1</span>
-        <span class="separator">|</span>
-        <span class="active">Settings</span>
+      <nav>
+        <a href="home.html">Home</a>
+        <a href="shelf.html">My Shelves</a>
       </nav>
     </div>
     <div class="right-section">
-      <i class="fas fa-user-circle" aria-label="Profile"></i>
+      <i class="fas fa-search" aria-label="Search" onclick="window.location.href='home.html'"></i>
+      <div class="user-menu-container">
+        <i class="fas fa-user-circle" id="user-icon" aria-label="Profile"></i>
+        <div class="user-dropdown" id="user-dropdown">
+          <div class="user-info">
+            <span id="user-email">User</span>
+          </div>
+          <button class="sign-out-btn" onclick="signOut()">Sign Out</button>
+        </div>
+      </div>
     </div>
   </header>
 
   <div class="settings-container">
-    <!-- Left Sidebar - Playlists -->
+    <!-- Left Sidebar - Shelves -->
     <aside class="settings-sidebar">
-      <h2>Playlists</h2>
+      <h2>Shelves</h2>
       <ul id="playlist-list">
-        <li class="active">Custom Playlist #1</li>
+        <li class="active">Custom Shelf #1</li>
       </ul>
-      <button class="add-playlist-btn" aria-label="Add new playlist">
+      <button class="add-playlist-btn" aria-label="Add new shelf" onclick="addNewShelf()">
         <i class="fas fa-plus"></i>
       </button>
     </aside>
@@ -45,6 +53,7 @@
     <main class="settings-content">
       <div class="settings-wrapper">
         <h1 class="settings-title">Shelf Settings</h1>
+        <p class="settings-subtitle" id="current-shelf-name-settings">Custom Shelf #1</p>
 
         <!-- Background Setting -->
         <section class="settings-group">
@@ -71,6 +80,18 @@
               <div class="texture-preview stone-texture"></div>
               <span>Stone</span>
             </div>
+            <div class="texture-option" data-texture="marble" title="Marble">
+              <div class="texture-preview marble-texture"></div>
+              <span>Marble</span>
+            </div>
+            <div class="texture-option" data-texture="metal" title="Metal">
+              <div class="texture-preview metal-texture"></div>
+              <span>Metal</span>
+            </div>
+            <div class="texture-option" data-texture="brick" title="Brick">
+              <div class="texture-preview brick-texture"></div>
+              <span>Brick</span>
+            </div>
             <div class="texture-option active" data-texture="none" title="None">
               <div class="texture-preview no-texture"></div>
               <span>None</span>
@@ -89,7 +110,7 @@
 
         <!-- Decorations -->
         <section class="settings-group">
-          <h3>Decorations</h3>
+          <h3>Decorations (Select up to 2 for bookends)</h3>
           <div class="decoration-grid">
             <div class="decoration-item" data-decor="flag" title="Flag">
               <i class="fas fa-flag"></i>
@@ -109,6 +130,24 @@
             <div class="decoration-item" data-decor="apple" title="Apple">
               <i class="fas fa-apple-alt"></i>
             </div>
+            <div class="decoration-item" data-decor="star" title="Star">
+              <i class="fas fa-star"></i>
+            </div>
+            <div class="decoration-item" data-decor="heart" title="Heart">
+              <i class="fas fa-heart"></i>
+            </div>
+            <div class="decoration-item" data-decor="moon" title="Moon">
+              <i class="fas fa-moon"></i>
+            </div>
+            <div class="decoration-item" data-decor="sun" title="Sun">
+              <i class="fas fa-sun"></i>
+            </div>
+            <div class="decoration-item" data-decor="crown" title="Crown">
+              <i class="fas fa-crown"></i>
+            </div>
+            <div class="decoration-item" data-decor="gem" title="Gem">
+              <i class="fas fa-gem"></i>
+            </div>
           </div>
         </section>
 
@@ -127,10 +166,19 @@
             <!-- Mini shelf preview showing current settings -->
           </div>
         </section>
+
+        <!-- Save and Discard Buttons -->
+        <section class="settings-group">
+          <div class="settings-actions">
+            <button class="save-btn" id="save-settings-btn">Save Changes</button>
+            <button class="discard-btn" id="discard-settings-btn">Discard Changes</button>
+          </div>
+        </section>
       </div>
     </main>
   </div>
 
+  <script src="js/user-menu.js"></script>
   <script src="js/shelf.js"></script>
   <script src="js/shelf-settings.js"></script>
 </body>

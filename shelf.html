@@ -18,12 +18,20 @@
       </h1>
       <nav>
         <a href="home.html">Home</a>
-        <a href="shelf.html" class="active">My Shelf</a>
+        <a href="shelf.html" class="active">My Shelves</a>
       </nav>
     </div>
     <div class="right-section">
-      <i class="fas fa-search" aria-label="Search"></i>
-      <i class="fas fa-user-circle" aria-label="Profile" onclick="window.location.href='shelf-settings.html'"></i>
+      <i class="fas fa-search" aria-label="Search" onclick="window.location.href='home.html'"></i>
+      <div class="user-menu-container">
+        <i class="fas fa-user-circle" id="user-icon" aria-label="Profile"></i>
+        <div class="user-dropdown" id="user-dropdown">
+          <div class="user-info">
+            <span id="user-email">User</span>
+          </div>
+          <button class="sign-out-btn" onclick="signOut()">Sign Out</button>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -34,9 +42,9 @@
       <section class="playlist-section">
         <h2>My Shelves</h2>
         <ul id="shelf-list">
-          <li class="active">Custom Playlist #1</li>
+          <li class="active">Custom Shelf #1</li>
         </ul>
-        <button class="add-shelf-btn" aria-label="Add new shelf">
+        <button class="add-shelf-btn" aria-label="Add new shelf" onclick="addNewShelf()">
           <i class="fas fa-plus"></i> New Shelf
         </button>
       </section>
@@ -52,8 +60,8 @@
     <!-- Main Shelf Display Area -->
     <main class="shelf-display">
       <div class="shelf-header">
-        <h2>Custom Playlist #1</h2>
-        <button class="shelf-options-btn" aria-label="Shelf options" onclick="window.location.href='shelf-settings.html'">
+        <h2 id="current-shelf-name">Custom Shelf #1</h2>
+        <button class="shelf-options-btn" aria-label="Customize Shelf" title="Customize Shelf" onclick="window.location.href='shelf-settings.html'">
           <i class="fas fa-ellipsis-h"></i>
         </button>
       </div>
@@ -72,6 +80,7 @@
     </main>
   </div>
 
+  <script src="js/user-menu.js"></script>
   <script src="js/shelf.js"></script>
 </body>
 </html>

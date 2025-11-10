@@ -110,6 +110,7 @@ document.querySelectorAll('.row-container').forEach(container => {
   });
 });
 
+// Genre filtering functionality
 const sidebarButtons = document.querySelectorAll('.sidebar button');
 const categories = document.querySelectorAll('.category');
 
@@ -124,6 +125,9 @@ sidebarButtons.forEach(button => {
       activeFilters.delete(filter);
       button.classList.remove('active');
     } else {
+      // Clear all other active filters for single selection
+      sidebarButtons.forEach(btn => btn.classList.remove('active'));
+      activeFilters.clear();
       activeFilters.add(filter);
       button.classList.add('active');
     }
@@ -133,29 +137,46 @@ sidebarButtons.forEach(button => {
       categories.forEach(cat => cat.style.display = 'block'); // show all if no filter
     } else {
       categories.forEach(cat => {
-        activeFilters.has(cat.id) ? cat.style.display = 'block' : cat.style.display = 'none';
+        // Get the book-row element and its ID
+        const bookRow = cat.querySelector('.book-row');
+        if (bookRow) {
+          const categoryId = bookRow.id;
+          // Match filter with category ID (handle scifi -> scifi mapping)
+          if (activeFilters.has(categoryId)) {
+            cat.style.display = 'block';
+          } else {
+            cat.style.display = 'none';
+          }
+        }
       });
     }
   });
 });
 
-// Example: inside your book row creation
-bookData[category].forEach(book => {
-  const bookDiv = document.createElement('div');
-  bookDiv.classList.add('book');
-  bookDiv.innerHTML = `
-    <img src="${book.img}" alt="${book.title}">
-    <p>${book.title}</p>
-  `;
+// Search functionality
+const searchIcon = document.querySelector('.right-section .fa-search');
+if (searchIcon) {
+  searchIcon.addEventListener('click', () => {
+    const searchTerm = prompt('Enter book title to search:');
+    if (searchTerm) {
+      // Search through all books
+      let foundBook = null;
+      Object.keys(bookData).forEach(category => {
+        bookData[category].forEach(book => {
+          if (book.title.toLowerCase().includes(searchTerm.toLowerCase())) {
+            foundBook = book;
+          }
+        });
+      });
 
-
-  // 👇 Add this event listener
-  bookDiv.addEventListener('click', () => {
-    localStorage.setItem('selectedBook', JSON.stringify(book));
-    window.location.href = 'book.html';
+      if (foundBook) {
+        localStorage.setItem('selectedBook', JSON.stringify(foundBook));
+        window.location.href = 'book.html';
+      } else {
+        alert(`No book found matching "${searchTerm}"`);
+      }
+    }
   });
-
-  row.appendChild(bookDiv);
-});
+}
 
 

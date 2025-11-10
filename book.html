@@ -17,12 +17,20 @@
       <div class="logo"><span class="book">Book</span>ify</div>
       <nav class="nav-links">
         <a href="home.html">Home</a>
-        <a href="shelf.html">My Shelf</a>
+        <a href="shelf.html">My Shelves</a>
       </nav>
     </div>
     <div class="header-icons">
       <i class="fas fa-search"></i>
-      <i class="fas fa-user"></i>
+      <div class="user-menu-container">
+        <i class="fas fa-user-circle" id="user-icon" aria-label="Profile"></i>
+        <div class="user-dropdown" id="user-dropdown">
+          <div class="user-info">
+            <span id="user-email">User</span>
+          </div>
+          <button class="sign-out-btn" onclick="signOut()">Sign Out</button>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -45,6 +53,7 @@
   </main>
 
   <!-- ✅ Link to your JS -->
+  <script src="js/user-menu.js"></script>
   <script src="js/book.js"></script>
 </body>
 </html>
