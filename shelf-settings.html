@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bookify – Shelf Settings</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/shelf.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header with breadcrumb-style navigation -->
+  <header>
+    <div class="left-section">
+      <h1 class="logo">
+        <a href="shelf.html" style="text-decoration: none; color: inherit;">
+          <span class="book">Book</span><span class="ify">ify</span>
+        </a>
+      </h1>
+      <nav class="breadcrumb-nav">
+        <span>Custom Playlist #1</span>
+        <span class="separator">|</span>
+        <span class="active">Settings</span>
+      </nav>
+    </div>
+    <div class="right-section">
+      <i class="fas fa-user-circle" aria-label="Profile"></i>
+    </div>
+  </header>
+
+  <div class="settings-container">
+    <!-- Left Sidebar - Playlists -->
+    <aside class="settings-sidebar">
+      <h2>Playlists</h2>
+      <ul id="playlist-list">
+        <li class="active">Custom Playlist #1</li>
+      </ul>
+      <button class="add-playlist-btn" aria-label="Add new playlist">
+        <i class="fas fa-plus"></i>
+      </button>
+    </aside>
+
+    <!-- Main Settings Content -->
+    <main class="settings-content">
+      <div class="settings-wrapper">
+        <h1 class="settings-title">Shelf Settings</h1>
+
+        <!-- Background Setting -->
+        <section class="settings-group">
+          <h3>Background</h3>
+          <div class="setting-control">
+            <input type="color" id="bg-picker" value="#141414" />
+            <label for="bg-picker">Choose background color</label>
+          </div>
+        </section>
+
+        <!-- Shelf Texture -->
+        <section class="settings-group">
+          <h3>Shelf Texture</h3>
+          <div class="texture-options">
+            <div class="texture-option" data-texture="wood" title="Wood">
+              <div class="texture-preview wood-texture"></div>
+              <span>Wood</span>
+            </div>
+            <div class="texture-option" data-texture="glass" title="Glass">
+              <div class="texture-preview glass-texture"></div>
+              <span>Glass</span>
+            </div>
+            <div class="texture-option" data-texture="stone" title="Stone">
+              <div class="texture-preview stone-texture"></div>
+              <span>Stone</span>
+            </div>
+            <div class="texture-option active" data-texture="none" title="None">
+              <div class="texture-preview no-texture"></div>
+              <span>None</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Shelf Color -->
+        <section class="settings-group">
+          <h3>Shelf Color</h3>
+          <div class="setting-control">
+            <input type="color" id="shelf-color-picker" value="#8B4513" />
+            <label for="shelf-color-picker">Choose shelf color</label>
+          </div>
+        </section>
+
+        <!-- Decorations -->
+        <section class="settings-group">
+          <h3>Decorations</h3>
+          <div class="decoration-grid">
+            <div class="decoration-item" data-decor="flag" title="Flag">
+              <i class="fas fa-flag"></i>
+            </div>
+            <div class="decoration-item" data-decor="airplane" title="Airplane">
+              <i class="fas fa-plane"></i>
+            </div>
+            <div class="decoration-item" data-decor="bookmark" title="Bookmark">
+              <i class="fas fa-bookmark"></i>
+            </div>
+            <div class="decoration-item" data-decor="person" title="Person">
+              <i class="fas fa-user"></i>
+            </div>
+            <div class="decoration-item" data-decor="frog" title="Frog">
+              <i class="fas fa-frog"></i>
+            </div>
+            <div class="decoration-item" data-decor="apple" title="Apple">
+              <i class="fas fa-apple-alt"></i>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slotted Books Section -->
+        <section class="settings-group">
+          <h3>Slotted Books</h3>
+          <div id="slotted-books-list" class="slotted-books-list">
+            <!-- List of books currently on shelf -->
+          </div>
+        </section>
+
+        <!-- Live Preview Area -->
+        <section class="settings-group">
+          <h3>Preview</h3>
+          <div class="shelf-preview" id="shelf-preview">
+            <!-- Mini shelf preview showing current settings -->
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/shelf.js"></script>
+  <script src="js/shelf-settings.js"></script>
+</body>
+</html>
+

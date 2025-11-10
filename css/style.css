@@ -58,6 +58,12 @@ nav a {
 
 nav a:hover { color: #e50914; }
 
+nav a.active {
+  color: #e50914;
+  border-bottom: 2px solid #e50914;
+  padding-bottom: 2px;
+}
+
 .right-section {
   display: flex;
   align-items: center;

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bookify – My Shelf</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/shelf.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header (matches home.html pattern) -->
+  <header>
+    <div class="left-section">
+      <h1 class="logo">
+        <span class="book">Book</span><span class="ify">ify</span>
+      </h1>
+      <nav>
+        <a href="home.html">Home</a>
+        <a href="shelf.html" class="active">My Shelf</a>
+      </nav>
+    </div>
+    <div class="right-section">
+      <i class="fas fa-search" aria-label="Search"></i>
+      <i class="fas fa-user-circle" aria-label="Profile" onclick="window.location.href='shelf-settings.html'"></i>
+    </div>
+  </header>
+
+  <!-- Two-column layout: Sidebar + Main Shelf -->
+  <div class="shelf-container">
+    <!-- Left Sidebar -->
+    <aside class="shelf-sidebar">
+      <section class="playlist-section">
+        <h2>My Shelves</h2>
+        <ul id="shelf-list">
+          <li class="active">Custom Playlist #1</li>
+        </ul>
+        <button class="add-shelf-btn" aria-label="Add new shelf">
+          <i class="fas fa-plus"></i> New Shelf
+        </button>
+      </section>
+
+      <section class="recommendations">
+        <h2>Recommended Books</h2>
+        <ul id="recommended-list">
+          <!-- Populated from bookData in script.js -->
+        </ul>
+      </section>
+    </aside>
+
+    <!-- Main Shelf Display Area -->
+    <main class="shelf-display">
+      <div class="shelf-header">
+        <h2>Custom Playlist #1</h2>
+        <button class="shelf-options-btn" aria-label="Shelf options" onclick="window.location.href='shelf-settings.html'">
+          <i class="fas fa-ellipsis-h"></i>
+        </button>
+      </div>
+
+      <!-- Visual Shelf with Books -->
+      <div class="book-shelf-container">
+        <div class="book-shelf" id="book-shelf">
+          <!-- Book slots populated from localStorage -->
+        </div>
+      </div>
+
+      <!-- Add Book Button (large circular button) -->
+      <button class="add-book-btn" aria-label="Add book to shelf" onclick="window.location.href='home.html'">
+        <i class="fas fa-plus"></i>
+      </button>
+    </main>
+  </div>
+
+  <script src="js/shelf.js"></script>
+</body>
+</html>
+
