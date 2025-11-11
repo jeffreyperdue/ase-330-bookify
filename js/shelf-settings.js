@@ -140,7 +140,17 @@ function updatePreview() {
   // Clear preview completely
   preview.innerHTML = '';
 
-  const myShelf = JSON.parse(localStorage.getItem('myShelf')) || [];
+  // Get books from current shelf
+  const shelves = JSON.parse(localStorage.getItem('shelves')) || [];
+  const currentShelfId = localStorage.getItem('currentShelfId');
+  let myShelf = [];
+  
+  if (currentShelfId && shelves.length > 0) {
+    const currentShelf = shelves.find(s => s.id.toString() === currentShelfId);
+    if (currentShelf) {
+      myShelf = currentShelf.books || [];
+    }
+  }
 
   // Add left bookend if decoration exists
   if (settings.decorations && settings.decorations.length > 0 && settings.decorations[0]) {
@@ -194,7 +204,21 @@ function loadSlottedBooks() {
   const slottedBooksList = document.getElementById('slotted-books-list');
   if (!slottedBooksList) return;
 
-  const myShelf = JSON.parse(localStorage.getItem('myShelf')) || [];
+  const shelves = JSON.parse(localStorage.getItem('shelves')) || [];
+  const currentShelfId = localStorage.getItem('currentShelfId');
+  
+  if (!currentShelfId || shelves.length === 0) {
+    slottedBooksList.innerHTML = '<p style="color: #ccc;">No shelf selected.</p>';
+    return;
+  }
+  
+  const currentShelf = shelves.find(s => s.id.toString() === currentShelfId);
+  if (!currentShelf) {
+    slottedBooksList.innerHTML = '<p style="color: #ccc;">Shelf not found.</p>';
+    return;
+  }
+  
+  const myShelf = currentShelf.books || [];
   
   slottedBooksList.innerHTML = '';
 
@@ -236,14 +260,7 @@ function loadSlottedBooks() {
   // Update current shelf name in settings
   const currentShelfNameSettings = document.getElementById('current-shelf-name-settings');
   if (currentShelfNameSettings) {
-    const shelves = JSON.parse(localStorage.getItem('shelves')) || [];
-    const currentShelfId = localStorage.getItem('currentShelfId');
-    if (currentShelfId && shelves.length > 0) {
-      const currentShelf = shelves.find(s => s.id.toString() === currentShelfId);
-      if (currentShelf) {
-        currentShelfNameSettings.textContent = currentShelf.name;
-      }
-    }
+    currentShelfNameSettings.textContent = currentShelf.name;
   }
 }
 
@@ -268,24 +285,27 @@ function getDecorationIcon(decor) {
 
 // Remove book from shelf
 function removeBookFromShelf(index) {
-  const myShelf = JSON.parse(localStorage.getItem('myShelf')) || [];
+  const shelves = JSON.parse(localStorage.getItem('shelves')) || [];
+  const currentShelfId = localStorage.getItem('currentShelfId');
+  
+  if (!currentShelfId || shelves.length === 0) return;
+  
+  const shelfIndex = shelves.findIndex(s => s.id.toString() === currentShelfId);
+  if (shelfIndex === -1) return;
+  
+  const currentShelf = shelves[shelfIndex];
+  const myShelf = currentShelf.books || [];
   
   if (index >= 0 && index < myShelf.length) {
     const bookTitle = myShelf[index].title;
-    if (confirm(`Remove "${bookTitle}" from your shelf?`)) {
+    if (confirm(`Remove "${bookTitle}" from "${currentShelf.name}"?`)) {
       myShelf.splice(index, 1);
-      localStorage.setItem('myShelf', JSON.stringify(myShelf));
+      currentShelf.books = myShelf;
+      shelves[shelfIndex] = currentShelf;
+      localStorage.setItem('shelves', JSON.stringify(shelves));
       
-      // Update current shelf in shelves array
-      const currentShelfId = localStorage.getItem('currentShelfId');
-      if (currentShelfId) {
-        let shelves = JSON.parse(localStorage.getItem('shelves')) || [];
-        const shelfIndex = shelves.findIndex(s => s.id.toString() === currentShelfId);
-        if (shelfIndex !== -1) {
-          shelves[shelfIndex].books = myShelf;
-          localStorage.setItem('shelves', JSON.stringify(shelves));
-        }
-      }
+      // Sync with legacy myShelf
+      localStorage.setItem('myShelf', JSON.stringify(myShelf));
       
       // Reload slotted books and preview
       loadSlottedBooks();

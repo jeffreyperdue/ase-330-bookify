@@ -108,6 +108,21 @@
             decorations: []
           }));
         }
+        // Initialize shelves array if it doesn't exist
+        if (!localStorage.getItem('shelves')) {
+          localStorage.setItem('shelves', JSON.stringify([{
+            id: 1,
+            name: 'Custom Shelf #1',
+            books: [],
+            settings: {
+              background: "#141414",
+              texture: "none",
+              color: "#8B4513",
+              decorations: []
+            }
+          }]));
+          localStorage.setItem('currentShelfId', '1');
+        }
         
         // Redirect to home page
         window.location.href = 'home.html';
