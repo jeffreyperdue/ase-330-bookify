@@ -194,152 +194,207 @@ function loadSettings(shelfId = null) {
 
 // Get current settings from UI (without saving)
 function getCurrentSettings() {
-  // Get bookend decorations (left and right)
-  const decorations = [];
-  
-  // Check for icon selections
-  const selectedIcons = Array.from(document.querySelectorAll('.decoration-item.selected[data-type="icon"]'));
-  if (selectedIcons.length > 0) {
-    selectedIcons.forEach((item, index) => {
-      if (index < 2) {
-        decorations.push({
-          type: 'icon',
-          value: item.dataset.decor,
-          position: index === 0 ? 'left' : 'right'
-        });
-      }
-    });
-  }
-  
-  // Check for image uploads
-  const leftImageInput = document.getElementById('bookend-image-upload-left');
-  const rightImageInput = document.getElementById('bookend-image-upload-right');
-  if (leftImageInput && leftImageInput.dataset.imageData) {
-    decorations[0] = {
-      type: 'image',
-      value: leftImageInput.dataset.imageData,
-      position: 'left'
-    };
-  }
-  if (rightImageInput && rightImageInput.dataset.imageData) {
-    decorations[1] = decorations[1] || { position: 'right' };
-    decorations[1] = {
-      type: 'image',
-      value: rightImageInput.dataset.imageData,
-      position: 'right'
-    };
-  }
-  
-  // Check for text inputs
-  const leftText = document.getElementById('bookend-text-left')?.value.trim();
-  const rightText = document.getElementById('bookend-text-right')?.value.trim();
-  if (leftText) {
-    decorations[0] = {
-      type: 'text',
-      value: leftText,
-      position: 'left'
-    };
-  }
-  if (rightText) {
-    decorations[1] = decorations[1] || { position: 'right' };
-    decorations[1] = {
-      type: 'text',
-      value: rightText,
-      position: 'right'
-    };
-  }
-  
-  // Check for shapes
-  const leftShape = document.getElementById('bookend-shape-left')?.value;
-  const rightShape = document.getElementById('bookend-shape-right')?.value;
-  if (leftShape) {
-    decorations[0] = {
-      type: 'shape',
-      value: leftShape,
-      position: 'left'
-    };
-  }
-  if (rightShape) {
-    decorations[1] = decorations[1] || { position: 'right' };
-    decorations[1] = {
-      type: 'shape',
-      value: rightShape,
-      position: 'right'
-    };
-  }
-  
-  // Get bookend background settings
-  const showBackground = document.getElementById('bookend-show-background')?.checked ?? true;
-  const bgColor = document.getElementById('bookend-bg-color')?.value || '#654321';
-  const bgOpacity = parseInt(document.getElementById('bookend-bg-opacity')?.value || '100');
-  
-  // Get background settings
-  const activeBgTab = document.querySelector('.bg-tab.active')?.dataset.bgTab || 'color';
-  let background = document.getElementById('bg-picker').value;
-  let backgroundType = 'color';
-  let backgroundImage = null;
-  let backgroundGradient = null;
-  
-  if (activeBgTab === 'image') {
-    const bgImageInput = document.getElementById('bg-image-upload');
-    if (bgImageInput && bgImageInput.dataset.imageData) {
-      backgroundType = 'image';
-      backgroundImage = bgImageInput.dataset.imageData;
-    }
-  } else if (activeBgTab === 'gradient') {
-    backgroundType = 'gradient';
-    const gradientType = document.getElementById('gradient-type')?.value || 'linear';
-    const gradientDirection = document.getElementById('gradient-direction')?.value || 'to right';
-    const color1 = document.getElementById('gradient-color-1')?.value || '#141414';
-    const color2 = document.getElementById('gradient-color-2')?.value || '#2a2a2a';
-    const color3 = document.getElementById('gradient-color-3')?.value;
-    const useColor3 = document.getElementById('gradient-color-3')?.dataset.use === 'true';
+  try {
+    // Get bookend decorations (left and right)
+    const decorations = [];
     
-    backgroundGradient = {
-      type: gradientType,
-      direction: gradientDirection,
-      colors: useColor3 && color3 ? [color1, color2, color3] : [color1, color2]
+    // Check for icon selections
+    const selectedIcons = Array.from(document.querySelectorAll('.decoration-item.selected[data-type="icon"]'));
+    if (selectedIcons.length > 0) {
+      selectedIcons.forEach((item, index) => {
+        if (index < 2) {
+          decorations.push({
+            type: 'icon',
+            value: item.dataset.decor,
+            position: index === 0 ? 'left' : 'right'
+          });
+        }
+      });
+    }
+    
+    // Check for image uploads
+    const leftImageInput = document.getElementById('bookend-image-upload-left');
+    const rightImageInput = document.getElementById('bookend-image-upload-right');
+    if (leftImageInput && leftImageInput.dataset.imageData) {
+      decorations[0] = {
+        type: 'image',
+        value: leftImageInput.dataset.imageData,
+        position: 'left'
+      };
+    }
+    if (rightImageInput && rightImageInput.dataset.imageData) {
+      decorations[1] = decorations[1] || { position: 'right' };
+      decorations[1] = {
+        type: 'image',
+        value: rightImageInput.dataset.imageData,
+        position: 'right'
+      };
+    }
+    
+    // Check for text inputs
+    const leftText = document.getElementById('bookend-text-left')?.value.trim();
+    const rightText = document.getElementById('bookend-text-right')?.value.trim();
+    if (leftText) {
+      decorations[0] = {
+        type: 'text',
+        value: leftText,
+        position: 'left'
+      };
+    }
+    if (rightText) {
+      decorations[1] = decorations[1] || { position: 'right' };
+      decorations[1] = {
+        type: 'text',
+        value: rightText,
+        position: 'right'
+      };
+    }
+    
+    // Check for shapes
+    const leftShape = document.getElementById('bookend-shape-left')?.value;
+    const rightShape = document.getElementById('bookend-shape-right')?.value;
+    if (leftShape) {
+      decorations[0] = {
+        type: 'shape',
+        value: leftShape,
+        position: 'left'
+      };
+    }
+    if (rightShape) {
+      decorations[1] = decorations[1] || { position: 'right' };
+      decorations[1] = {
+        type: 'shape',
+        value: rightShape,
+        position: 'right'
+      };
+    }
+    
+    // Get bookend background settings
+    const showBackground = document.getElementById('bookend-show-background')?.checked ?? true;
+    const bgColor = document.getElementById('bookend-bg-color')?.value || '#654321';
+    const bgOpacity = parseInt(document.getElementById('bookend-bg-opacity')?.value || '100');
+    
+    // Get background settings
+    const activeBgTab = document.querySelector('.bg-tab.active')?.dataset.bgTab || 'color';
+    const bgPicker = document.getElementById('bg-picker');
+    let background = bgPicker ? bgPicker.value : '#141414';
+    let backgroundType = 'color';
+    let backgroundImage = null;
+    let backgroundGradient = null;
+    
+    if (activeBgTab === 'image') {
+      const bgImageInput = document.getElementById('bg-image-upload');
+      if (bgImageInput && bgImageInput.dataset.imageData) {
+        backgroundType = 'image';
+        backgroundImage = bgImageInput.dataset.imageData;
+      }
+    } else if (activeBgTab === 'gradient') {
+      backgroundType = 'gradient';
+      const gradientType = document.getElementById('gradient-type')?.value || 'linear';
+      const gradientDirection = document.getElementById('gradient-direction')?.value || 'to right';
+      const color1 = document.getElementById('gradient-color-1')?.value || '#141414';
+      const color2 = document.getElementById('gradient-color-2')?.value || '#2a2a2a';
+      const color3 = document.getElementById('gradient-color-3')?.value;
+      const useColor3 = document.getElementById('gradient-color-3')?.dataset.use === 'true';
+      
+      backgroundGradient = {
+        type: gradientType,
+        direction: gradientDirection,
+        colors: useColor3 && color3 ? [color1, color2, color3] : [color1, color2]
+      };
+    }
+    
+    const textureOption = document.querySelector('.texture-option.active');
+    const shelfColorPicker = document.getElementById('shelf-color-picker');
+    
+    return {
+      background: background,
+      backgroundType: backgroundType,
+      backgroundImage: backgroundImage,
+      backgroundGradient: backgroundGradient,
+      texture: textureOption ? (textureOption.dataset.texture || 'none') : 'none',
+      color: shelfColorPicker ? shelfColorPicker.value : '#8B4513',
+      decorations: decorations,
+      bookendBackground: {
+        show: showBackground,
+        color: bgColor,
+        opacity: bgOpacity / 100
+      }
+    };
+  } catch (error) {
+    console.error('Error getting current settings:', error);
+    // Return a safe default settings object
+    return {
+      background: '#141414',
+      backgroundType: 'color',
+      backgroundImage: null,
+      backgroundGradient: null,
+      texture: 'none',
+      color: '#8B4513',
+      decorations: [],
+      bookendBackground: {
+        show: true,
+        color: '#654321',
+        opacity: 1
+      }
     };
   }
-  
-  return {
-    background: background,
-    backgroundType: backgroundType,
-    backgroundImage: backgroundImage,
-    backgroundGradient: backgroundGradient,
-    texture: document.querySelector('.texture-option.active')?.dataset.texture || 'none',
-    color: document.getElementById('shelf-color-picker').value,
-    decorations: decorations,
-    bookendBackground: {
-      show: showBackground,
-      color: bgColor,
-      opacity: bgOpacity / 100
-    }
-  };
 }
 
 // Save settings to localStorage
 function saveSettingsToStorage() {
-  const settings = getCurrentSettings();
-
-  localStorage.setItem('shelfSettings', JSON.stringify(settings));
-  
-  // Also update current shelf in shelves array if it exists
-  const currentShelfId = localStorage.getItem('currentShelfId');
-  if (currentShelfId) {
-    let shelves = JSON.parse(localStorage.getItem('shelves')) || [];
-    const shelfIndex = shelves.findIndex(s => s.id.toString() === currentShelfId);
-    if (shelfIndex !== -1) {
-      shelves[shelfIndex].settings = settings;
-      localStorage.setItem('shelves', JSON.stringify(shelves));
+  try {
+    const settings = getCurrentSettings();
+    
+    // Check size of settings object (approximate)
+    const settingsString = JSON.stringify(settings);
+    const sizeInMB = new Blob([settingsString]).size / (1024 * 1024);
+    
+    // Warn if settings are getting large (over 2MB)
+    if (sizeInMB > 2) {
+      console.warn(`Settings size: ${sizeInMB.toFixed(2)}MB - may be close to localStorage limit`);
     }
+
+    // Try to save to shelfSettings
+    try {
+      localStorage.setItem('shelfSettings', settingsString);
+    } catch (e) {
+      if (e.name === 'QuotaExceededError' || e.code === 22) {
+        throw new Error('Storage quota exceeded. The image file is too large. Please try a smaller image or remove other data.');
+      }
+      throw e;
+    }
+    
+    // Also update current shelf in shelves array if it exists
+    const currentShelfId = localStorage.getItem('currentShelfId');
+    if (currentShelfId) {
+      let shelves = JSON.parse(localStorage.getItem('shelves')) || [];
+      const shelfIndex = shelves.findIndex(s => s.id.toString() === currentShelfId);
+      if (shelfIndex !== -1) {
+        shelves[shelfIndex].settings = settings;
+        
+        // Try to save shelves array
+        try {
+          const shelvesString = JSON.stringify(shelves);
+          localStorage.setItem('shelves', shelvesString);
+        } catch (e) {
+          if (e.name === 'QuotaExceededError' || e.code === 22) {
+            throw new Error('Storage quota exceeded. The image file is too large. Please try a smaller image or remove other data.');
+          }
+          throw e;
+        }
+      }
+    }
+    
+    // Update original settings to match saved settings
+    originalSettings = JSON.parse(JSON.stringify(settings));
+    hasUnsavedChanges = false; // Reset after saving
+    
+    return settings;
+  } catch (error) {
+    console.error('Error saving settings to storage:', error);
+    throw error; // Re-throw to be caught by caller
   }
-  
-  // Update original settings to match saved settings
-  originalSettings = JSON.parse(JSON.stringify(settings));
-  hasUnsavedChanges = false; // Reset after saving
-  
-  return settings;
 }
 
 // Discard changes and revert to original settings
@@ -366,13 +421,19 @@ function discardSettings() {
 
 // Check if there are unsaved changes
 function checkForUnsavedChanges() {
-  if (!originalSettings) {
-    hasUnsavedChanges = false;
-    return;
+  try {
+    if (!originalSettings) {
+      hasUnsavedChanges = false;
+      return;
+    }
+    
+    const current = getCurrentSettings();
+    hasUnsavedChanges = JSON.stringify(current) !== JSON.stringify(originalSettings);
+  } catch (error) {
+    console.error('Error checking for unsaved changes:', error);
+    // If there's an error, assume there are unsaved changes to be safe
+    hasUnsavedChanges = true;
   }
-  
-  const current = getCurrentSettings();
-  hasUnsavedChanges = JSON.stringify(current) !== JSON.stringify(originalSettings);
 }
 
 // Mark settings as saved (used when switching shelves)
@@ -1016,14 +1077,92 @@ function initSettings() {
     bgImageInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (file) {
+        // Check file size (warn if over 2MB)
+        const fileSizeMB = file.size / (1024 * 1024);
+        if (fileSizeMB > 2) {
+          if (!confirm(`Warning: This image is ${fileSizeMB.toFixed(2)}MB. Large images may cause storage issues. Do you want to continue?`)) {
+            bgImageInput.value = '';
+            return;
+          }
+        }
+        
         const reader = new FileReader();
         reader.onload = (event) => {
-          const base64 = event.target.result;
-          bgImageInput.dataset.imageData = base64;
-          bgImagePreview.innerHTML = `<img src="${base64}" alt="Background preview">`;
-          if (bgImageRemove) bgImageRemove.style.display = 'block';
-          updatePreview();
-          checkForUnsavedChanges();
+          try {
+            let base64 = event.target.result;
+            
+            // Compress image if it's too large (over 1MB as base64)
+            const base64SizeMB = new Blob([base64]).size / (1024 * 1024);
+            if (base64SizeMB > 1) {
+              // Compress the image
+              const img = new Image();
+              img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                
+                // Resize if too large (max 1920px on longest side)
+                const maxDimension = 1920;
+                if (width > maxDimension || height > maxDimension) {
+                  if (width > height) {
+                    height = (height / width) * maxDimension;
+                    width = maxDimension;
+                  } else {
+                    width = (width / height) * maxDimension;
+                    height = maxDimension;
+                  }
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Convert to base64 with quality compression
+                base64 = canvas.toDataURL('image/jpeg', 0.7);
+                
+                bgImageInput.dataset.imageData = base64;
+                bgImagePreview.innerHTML = `<img src="${base64}" alt="Background preview">`;
+                if (bgImageRemove) bgImageRemove.style.display = 'block';
+                updatePreview();
+                checkForUnsavedChanges();
+                
+                // Ensure save button remains clickable
+                const saveBtn = document.getElementById('save-settings-btn');
+                if (saveBtn) {
+                  saveBtn.style.pointerEvents = 'auto';
+                  saveBtn.style.cursor = 'pointer';
+                  saveBtn.disabled = false;
+                }
+              };
+              img.onerror = () => {
+                alert('Error loading image. Please try a different image.');
+                bgImageInput.value = '';
+              };
+              img.src = base64;
+            } else {
+              bgImageInput.dataset.imageData = base64;
+              bgImagePreview.innerHTML = `<img src="${base64}" alt="Background preview">`;
+              if (bgImageRemove) bgImageRemove.style.display = 'block';
+              updatePreview();
+              checkForUnsavedChanges();
+              
+              // Ensure save button remains clickable
+              const saveBtn = document.getElementById('save-settings-btn');
+              if (saveBtn) {
+                saveBtn.style.pointerEvents = 'auto';
+                saveBtn.style.cursor = 'pointer';
+                saveBtn.disabled = false;
+              }
+            }
+          } catch (error) {
+            console.error('Error processing background image upload:', error);
+            alert('Error processing image. Please try again.');
+          }
+        };
+        reader.onerror = () => {
+          console.error('Error reading file');
+          alert('Error reading image file. Please try again.');
         };
         reader.readAsDataURL(file);
       }
@@ -1159,19 +1298,106 @@ function initSettings() {
       input.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) {
+          // Check file size (warn if over 2MB)
+          const fileSizeMB = file.size / (1024 * 1024);
+          if (fileSizeMB > 2) {
+            if (!confirm(`Warning: This image is ${fileSizeMB.toFixed(2)}MB. Large images may cause storage issues. Do you want to continue?`)) {
+              input.value = '';
+              return;
+            }
+          }
+          
           const reader = new FileReader();
           reader.onload = (event) => {
-            const base64 = event.target.result;
-            input.dataset.imageData = base64;
-            preview.innerHTML = `<img src="${base64}" alt="Bookend preview">`;
-            
-            // Clear other types
-            document.querySelectorAll('.decoration-item.selected[data-type="icon"]').forEach(item => item.classList.remove('selected'));
-            document.getElementById(`bookend-text-${position}`).value = '';
-            document.getElementById(`bookend-shape-${position}`).value = '';
-            
-            updatePreview();
-            checkForUnsavedChanges();
+            try {
+              let base64 = event.target.result;
+              
+              // Compress image if it's too large (over 1MB as base64)
+              const base64SizeMB = new Blob([base64]).size / (1024 * 1024);
+              if (base64SizeMB > 1) {
+                // Compress the image
+                const img = new Image();
+                img.onload = () => {
+                  const canvas = document.createElement('canvas');
+                  let width = img.width;
+                  let height = img.height;
+                  
+                  // Resize if too large (max 800px on longest side for bookends)
+                  const maxDimension = 800;
+                  if (width > maxDimension || height > maxDimension) {
+                    if (width > height) {
+                      height = (height / width) * maxDimension;
+                      width = maxDimension;
+                    } else {
+                      width = (width / height) * maxDimension;
+                      height = maxDimension;
+                    }
+                  }
+                  
+                  canvas.width = width;
+                  canvas.height = height;
+                  const ctx = canvas.getContext('2d');
+                  ctx.drawImage(img, 0, 0, width, height);
+                  
+                  // Convert to base64 with quality compression
+                  base64 = canvas.toDataURL('image/jpeg', 0.7);
+                  
+                  input.dataset.imageData = base64;
+                  preview.innerHTML = `<img src="${base64}" alt="Bookend preview">`;
+                  
+                  // Clear other types
+                  document.querySelectorAll('.decoration-item.selected[data-type="icon"]').forEach(item => item.classList.remove('selected'));
+                  const textInput = document.getElementById(`bookend-text-${position}`);
+                  const shapeInput = document.getElementById(`bookend-shape-${position}`);
+                  if (textInput) textInput.value = '';
+                  if (shapeInput) shapeInput.value = '';
+                  
+                  updatePreview();
+                  checkForUnsavedChanges();
+                  
+                  // Ensure save button remains clickable
+                  const saveBtn = document.getElementById('save-settings-btn');
+                  if (saveBtn) {
+                    saveBtn.style.pointerEvents = 'auto';
+                    saveBtn.style.cursor = 'pointer';
+                    saveBtn.disabled = false;
+                  }
+                };
+                img.onerror = () => {
+                  alert('Error loading image. Please try a different image.');
+                  input.value = '';
+                };
+                img.src = base64;
+              } else {
+                input.dataset.imageData = base64;
+                preview.innerHTML = `<img src="${base64}" alt="Bookend preview">`;
+                
+                // Clear other types
+                document.querySelectorAll('.decoration-item.selected[data-type="icon"]').forEach(item => item.classList.remove('selected'));
+                const textInput = document.getElementById(`bookend-text-${position}`);
+                const shapeInput = document.getElementById(`bookend-shape-${position}`);
+                if (textInput) textInput.value = '';
+                if (shapeInput) shapeInput.value = '';
+                
+                updatePreview();
+                checkForUnsavedChanges();
+                
+                // Ensure save button remains clickable
+                const saveBtn = document.getElementById('save-settings-btn');
+                if (saveBtn) {
+                  saveBtn.style.pointerEvents = 'auto';
+                  saveBtn.style.cursor = 'pointer';
+                  saveBtn.disabled = false;
+                }
+              }
+            } catch (error) {
+              console.error('Error processing image upload:', error);
+              alert('Error processing image. Please try again.');
+            }
+          };
+          reader.onerror = () => {
+            console.error('Error reading file');
+            alert('Error reading image file. Please try again.');
           };
           reader.readAsDataURL(file);
         }
@@ -1266,57 +1492,77 @@ function initSettings() {
   // Save button - save settings and redirect to shelf
   const saveBtn = document.getElementById('save-settings-btn');
   if (saveBtn) {
-    saveBtn.addEventListener('click', () => {
-      // Save book order if it was rearranged
-      if (tempBookOrder !== null && tempBookOrder.length > 0) {
-        const shelves = JSON.parse(localStorage.getItem('shelves')) || [];
-        const currentShelfId = localStorage.getItem('currentShelfId');
-        
-        if (currentShelfId && shelves.length > 0) {
-          const shelfIndex = shelves.findIndex(s => s.id.toString() === currentShelfId);
-          if (shelfIndex !== -1) {
-            const currentShelf = migrateShelfToRowsForSettings(shelves[shelfIndex]);
-            
-            // Reorder books based on tempBookOrder
-            const reorderedBooks = tempBookOrder.map(item => item.book);
-            
-            // Redistribute into rows (5 books per row)
-            const rows = [];
-            const booksPerRow = 5;
-            
-            for (let i = 0; i < reorderedBooks.length; i += booksPerRow) {
-              rows.push({
-                id: rows.length + 1,
-                books: reorderedBooks.slice(i, i + booksPerRow)
-              });
+    // Ensure button is always clickable
+    saveBtn.style.pointerEvents = 'auto';
+    saveBtn.style.cursor = 'pointer';
+    saveBtn.disabled = false;
+    
+    saveBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      try {
+        // Save book order if it was rearranged
+        if (tempBookOrder !== null && tempBookOrder.length > 0) {
+          const shelves = JSON.parse(localStorage.getItem('shelves')) || [];
+          const currentShelfId = localStorage.getItem('currentShelfId');
+          
+          if (currentShelfId && shelves.length > 0) {
+            const shelfIndex = shelves.findIndex(s => s.id.toString() === currentShelfId);
+            if (shelfIndex !== -1) {
+              const currentShelf = migrateShelfToRowsForSettings(shelves[shelfIndex]);
+              
+              // Reorder books based on tempBookOrder
+              const reorderedBooks = tempBookOrder.map(item => item.book);
+              
+              // Redistribute into rows (5 books per row)
+              const rows = [];
+              const booksPerRow = 5;
+              
+              for (let i = 0; i < reorderedBooks.length; i += booksPerRow) {
+                rows.push({
+                  id: rows.length + 1,
+                  books: reorderedBooks.slice(i, i + booksPerRow)
+                });
+              }
+              
+              // If no books, keep at least one empty row
+              if (rows.length === 0) {
+                rows.push({
+                  id: 1,
+                  books: []
+                });
+              }
+              
+              currentShelf.rows = rows;
+              currentShelf.books = reorderedBooks; // Sync for backward compatibility
+              shelves[shelfIndex] = currentShelf;
+              localStorage.setItem('shelves', JSON.stringify(shelves));
+              
+              // Sync with legacy myShelf
+              localStorage.setItem('myShelf', JSON.stringify(reorderedBooks));
             }
-            
-            // If no books, keep at least one empty row
-            if (rows.length === 0) {
-              rows.push({
-                id: 1,
-                books: []
-              });
-            }
-            
-            currentShelf.rows = rows;
-            currentShelf.books = reorderedBooks; // Sync for backward compatibility
-            shelves[shelfIndex] = currentShelf;
-            localStorage.setItem('shelves', JSON.stringify(shelves));
-            
-            // Sync with legacy myShelf
-            localStorage.setItem('myShelf', JSON.stringify(reorderedBooks));
           }
+          
+          // Reset temp order
+          tempBookOrder = null;
+          window.tempBookOrder = null;
         }
         
-        // Reset temp order
-        tempBookOrder = null;
-        window.tempBookOrder = null;
+        saveSettingsToStorage();
+        alert('Settings saved successfully!');
+        window.location.href = 'shelf.html';
+      } catch (error) {
+        console.error('Error saving settings:', error);
+        // Provide more specific error message
+        let errorMessage = 'Error saving settings. Please try again.';
+        if (error.message && error.message.includes('quota')) {
+          errorMessage = error.message;
+        } else if (error.name === 'QuotaExceededError' || error.code === 22) {
+          errorMessage = 'Storage quota exceeded. The image file is too large. Please try a smaller image (under 1MB recommended) or remove other data from your browser storage.';
+        }
+        alert(errorMessage);
       }
-      
-      saveSettingsToStorage();
-      alert('Settings saved successfully!');
-      window.location.href = 'shelf.html';
     });
   }
 

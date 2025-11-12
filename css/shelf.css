@@ -165,6 +165,14 @@
   margin-bottom: 100px;
   overflow-x: auto;
   width: 100%;
+  /* Hide scrollbar */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.book-shelf-container::-webkit-scrollbar {
+  display: none;
 }
 
 .book-shelf {
@@ -182,6 +190,14 @@
   min-height: 300px;
   border-top: 4px solid #8B4513;
   overflow-x: auto;
+  /* Hide scrollbar */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.book-shelf::-webkit-scrollbar {
+  display: none;
 }
 
 /* Shelf Row */
@@ -196,10 +212,18 @@
   position: relative;
   width: 100%;
   overflow-x: auto;
+  /* Hide scrollbar */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
   /* Ensure minimum width for 2 bookends + 5 books + gaps */
   min-width: calc(70px + 12px + 110px + 12px + 110px + 12px + 110px + 12px + 110px + 12px + 110px + 12px + 70px);
   box-sizing: border-box;
   min-height: 200px; /* Ensure enough height for delete button */
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.shelf-row::-webkit-scrollbar {
+  display: none;
 }
 
 .shelf-row:last-child {
