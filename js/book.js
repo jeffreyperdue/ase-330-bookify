@@ -228,7 +228,35 @@ function showShelfSelectionModal() {
   document.body.appendChild(modalOverlay);
 }
 
-// Add book to a specific shelf
+// Migrate shelf to row-based structure (helper function, same as in shelf.js)
+function migrateShelfToRows(shelf) {
+  if (shelf.rows && Array.isArray(shelf.rows)) {
+    return shelf;
+  }
+  
+  const books = shelf.books || [];
+  const rows = [];
+  const booksPerRow = 5;
+  
+  for (let i = 0; i < books.length; i += booksPerRow) {
+    rows.push({
+      id: rows.length + 1,
+      books: books.slice(i, i + booksPerRow)
+    });
+  }
+  
+  if (rows.length === 0) {
+    rows.push({
+      id: 1,
+      books: []
+    });
+  }
+  
+  shelf.rows = rows;
+  return shelf;
+}
+
+// Add book to a specific shelf (row-based)
 function addBookToShelf(shelfId) {
   if (!book) {
     alert('No book selected');
@@ -243,11 +271,23 @@ function addBookToShelf(shelfId) {
       id: 1,
       name: 'Custom Shelf #1',
       books: [],
+      rows: [{
+        id: 1,
+        books: []
+      }],
       settings: {
         background: "#141414",
+        backgroundType: "color",
+        backgroundImage: null,
+        backgroundGradient: null,
         texture: "none",
         color: "#8B4513",
-        decorations: []
+        decorations: [],
+        bookendBackground: {
+          show: true,
+          color: "#654321",
+          opacity: 1
+        }
       }
     }];
     shelfId = 1;
@@ -259,26 +299,52 @@ function addBookToShelf(shelfId) {
     return;
   }
   
+  // Migrate shelf if needed
+  shelves[shelfIndex] = migrateShelfToRows(shelves[shelfIndex]);
   const shelf = shelves[shelfIndex];
-  const books = shelf.books || [];
+  const rows = shelf.rows || [];
   
-  // Check if book is already on this shelf
-  const existingBook = books.find(b => b.title === book.title);
+  // Flatten all books to check for duplicates
+  const allBooks = rows.flatMap(row => row.books || []);
+  const existingBook = allBooks.find(b => b.title === book.title);
   if (existingBook) {
     alert(`${book.title} is already on "${shelf.name}"!`);
     return;
   }
   
-  // Add book to shelf
-  books.push(book);
-  shelf.books = books;
+  // Find first row with space (less than 5 books)
+  let targetRow = rows.find(row => (row.books || []).length < 5);
+  
+  // If no row has space, create a new row (if under max)
+  if (!targetRow) {
+    if (rows.length >= 10) {
+      alert(`Cannot add more books. Maximum of 10 rows with 5 books each (50 total) reached.`);
+      return;
+    }
+    
+    const newRowId = rows.length > 0 ? Math.max(...rows.map(r => r.id)) + 1 : 1;
+    targetRow = {
+      id: newRowId,
+      books: []
+    };
+    rows.push(targetRow);
+  }
+  
+  // Add book to target row
+  targetRow.books.push(book);
+  shelf.rows = rows;
+  
+  // Sync books array for backward compatibility
+  const updatedAllBooks = rows.flatMap(row => row.books || []);
+  shelf.books = updatedAllBooks;
+  
   shelves[shelfIndex] = shelf;
   localStorage.setItem('shelves', JSON.stringify(shelves));
   
   // Sync with legacy myShelf if this is the current shelf
   const currentShelfId = localStorage.getItem('currentShelfId');
   if (currentShelfId && currentShelfId.toString() === shelfId.toString()) {
-    localStorage.setItem('myShelf', JSON.stringify(books));
+    localStorage.setItem('myShelf', JSON.stringify(updatedAllBooks));
   }
   
   // Show confirmation

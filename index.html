@@ -103,9 +103,17 @@
         if (!localStorage.getItem('shelfSettings')) {
           localStorage.setItem('shelfSettings', JSON.stringify({
             background: "#141414",
+            backgroundType: "color",
+            backgroundImage: null,
+            backgroundGradient: null,
             texture: "none",
             color: "#8B4513",
-            decorations: []
+            decorations: [],
+            bookendBackground: {
+              show: true,
+              color: "#654321",
+              opacity: 1
+            }
           }));
         }
         // Initialize shelves array if it doesn't exist
@@ -114,11 +122,23 @@
             id: 1,
             name: 'Custom Shelf #1',
             books: [],
+            rows: [{
+              id: 1,
+              books: []
+            }],
             settings: {
               background: "#141414",
+              backgroundType: "color",
+              backgroundImage: null,
+              backgroundGradient: null,
               texture: "none",
               color: "#8B4513",
-              decorations: []
+              decorations: [],
+              bookendBackground: {
+                show: true,
+                color: "#654321",
+                opacity: 1
+              }
             }
           }]));
           localStorage.setItem('currentShelfId', '1');

@@ -186,6 +186,87 @@ nav a.active {
   color: #fff;
 }
 
+/* === HERO SECTION === */
+.hero-section {
+  margin-left: 220px; /* space for sidebar */
+  margin-top: 20px;
+  padding: 60px 40px;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+  border-bottom: 2px solid #333;
+}
+
+.hero-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.featured-books {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 40px;
+}
+
+.featured-book {
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, #181818 0%, #222 100%);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid #333;
+  cursor: pointer;
+}
+
+.featured-book:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 40px rgba(229, 9, 20, 0.3);
+  border-color: #e50914;
+}
+
+.featured-book-info {
+  padding: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.featured-book-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+  font-family: 'Poppins', sans-serif;
+  margin: 0 0 8px 0;
+  line-height: 1.2;
+}
+
+.featured-book-subtitle {
+  color: #ccc;
+  font-size: 0.9rem;
+  margin: 0;
+  font-style: italic;
+}
+
+.featured-book-image {
+  flex: 1;
+  min-height: 500px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.featured-book-image img {
+  width: 100%;
+  height: 100%;
+  min-height: 500px;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.featured-book:hover .featured-book-image img {
+  transform: scale(1.05);
+}
 
 /* === MAIN CONTENT === */
 main {
@@ -281,4 +362,55 @@ main {
   text-align: center;
   letter-spacing: 0.5px;              /* subtle spacing for clarity */
   cursor: pointer;
+}
+
+/* === RESPONSIVE DESIGN === */
+@media (max-width: 900px) {
+  .hero-section {
+    margin-left: 0;
+    padding: 40px 20px;
+  }
+  
+  .featured-books {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  
+  .featured-book-image {
+    min-height: 400px;
+  }
+  
+  .featured-book-image img {
+    min-height: 400px;
+  }
+  
+  .featured-book-title {
+    font-size: 1.3rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-section {
+    padding: 30px 15px;
+  }
+  
+  .featured-book-image {
+    min-height: 350px;
+  }
+  
+  .featured-book-image img {
+    min-height: 350px;
+  }
+  
+  .featured-book-info {
+    padding: 15px;
+  }
+  
+  .featured-book-title {
+    font-size: 1.2rem;
+  }
+  
+  .featured-book-subtitle {
+    font-size: 0.85rem;
+  }
 }

@@ -9,6 +9,10 @@ const bookData = {
     { title: "Addie LaRue", img: "https://covers.openlibrary.org/b/id/10317549-L.jpg" },
     { title: "A Man Called Ove", img: "https://covers.openlibrary.org/b/id/8228696-L.jpg" }
   ],
+  featured: [
+    { title: "The Midnight Library", img: "https://covers.openlibrary.org/b/id/10556125-L.jpg" },
+    { title: "Project Hail Mary", img: "https://covers.openlibrary.org/b/id/10958365-L.jpg" }
+  ],
   fantasy: [
     { title: "A Court of Thorns and Roses", img: "https://covers.openlibrary.org/b/id/10194747-L.jpg" },
     { title: "The Hobbit", img: "https://covers.openlibrary.org/b/id/6979861-L.jpg" },
@@ -71,10 +75,58 @@ const bookData = {
   ]
 };
 
-// Render books
+// Render featured books in hero section
+function renderFeaturedBooks() {
+  if (bookData.featured && bookData.featured.length >= 2) {
+    const featuredBook1 = document.getElementById('featured-book-1');
+    const featuredBook2 = document.getElementById('featured-book-2');
+    
+    if (featuredBook1) {
+      const book1 = bookData.featured[0];
+      const img1 = featuredBook1.querySelector('.featured-book-image img');
+      const title1 = featuredBook1.querySelector('.featured-book-title');
+      
+      if (img1) img1.src = book1.img;
+      if (img1) img1.alt = book1.title;
+      if (title1) title1.textContent = book1.title;
+      
+      // Add click event to entire featured book card
+      featuredBook1.addEventListener('click', () => {
+        localStorage.setItem('selectedBook', JSON.stringify(book1));
+        window.location.href = 'book.html';
+      });
+    }
+    
+    if (featuredBook2) {
+      const book2 = bookData.featured[1];
+      const img2 = featuredBook2.querySelector('.featured-book-image img');
+      const title2 = featuredBook2.querySelector('.featured-book-title');
+      
+      if (img2) img2.src = book2.img;
+      if (img2) img2.alt = book2.title;
+      if (title2) title2.textContent = book2.title;
+      
+      // Add click event to entire featured book card
+      featuredBook2.addEventListener('click', () => {
+        localStorage.setItem('selectedBook', JSON.stringify(book2));
+        window.location.href = 'book.html';
+      });
+    }
+  }
+}
+
+// Render books with infinite loop support
 Object.keys(bookData).forEach(category => {
+  // Skip featured category as it's handled separately
+  if (category === 'featured') return;
+  
   const container = document.getElementById(category);
   if (container) {
+    // Clear container first
+    container.innerHTML = '';
+    
+    // Create original books
+    const books = [];
     bookData[category].forEach(book => {
       const div = document.createElement("div");
       div.classList.add("book");
@@ -83,31 +135,139 @@ Object.keys(bookData).forEach(category => {
         <p>${book.title}</p>
       `;
 
-      // 👇 Add click event here
+      // Add click event
       div.addEventListener('click', () => {
         localStorage.setItem('selectedBook', JSON.stringify(book));
         window.location.href = 'book.html';
       });
 
       container.appendChild(div);
+      books.push({ element: div, book: book });
+    });
+    
+    // Duplicate books for infinite loop (add at the end)
+    books.forEach(({ element, book }) => {
+      const clone = element.cloneNode(true);
+      // Re-add click event to clone
+      clone.addEventListener('click', () => {
+        localStorage.setItem('selectedBook', JSON.stringify(book));
+        window.location.href = 'book.html';
+      });
+      container.appendChild(clone);
     });
   }
 });
 
+// Render featured books
+renderFeaturedBooks();
 
-// Scroll functionality
+// Infinite loop scroll functionality
 document.querySelectorAll('.row-container').forEach(container => {
   const row = container.querySelector('.book-row');
   const leftBtn = container.querySelector('.scroll-left');
   const rightBtn = container.querySelector('.scroll-right');
-
-  leftBtn.addEventListener('click', () => {
-    row.scrollBy({ left: -300, behavior: 'smooth' });
-  });
-
+  
+  if (!row) return;
+  
+  // Store the width of one scroll increment
+  const scrollAmount = 300;
+  let isScrolling = false;
+  let scrollTimeout;
+  
+  // Calculate original content width (half of total since we duplicated)
+  function getOriginalContentWidth() {
+    return row.scrollWidth / 2;
+  }
+  
+  // Function to handle infinite loop scrolling (for manual/drag scrolling)
+  function handleInfiniteScroll() {
+    if (isScrolling) return;
+    
+    const scrollLeft = row.scrollLeft;
+    const originalContentWidth = getOriginalContentWidth();
+    
+    // If scrolled past the original content (at the duplicates), jump back to start
+    if (scrollLeft >= originalContentWidth) {
+      isScrolling = true;
+      // Instantly jump back (no smooth scroll for the jump)
+      row.style.scrollBehavior = 'auto';
+      row.scrollLeft = scrollLeft - originalContentWidth;
+      // Re-enable smooth scrolling
+      setTimeout(() => {
+        row.style.scrollBehavior = 'smooth';
+        isScrolling = false;
+      }, 10);
+    }
+    // If scrolled to the left of start, jump to end of original content
+    else if (scrollLeft <= 0) {
+      isScrolling = true;
+      row.style.scrollBehavior = 'auto';
+      row.scrollLeft = originalContentWidth - scrollAmount;
+      setTimeout(() => {
+        row.style.scrollBehavior = 'smooth';
+        isScrolling = false;
+      }, 10);
+    }
+  }
+  
+  // Scroll right
   rightBtn.addEventListener('click', () => {
-    row.scrollBy({ left: 300, behavior: 'smooth' });
+    if (isScrolling) return;
+    isScrolling = true;
+    
+    const currentScroll = row.scrollLeft;
+    const originalContentWidth = getOriginalContentWidth();
+    
+    // If near the end of duplicates, jump to start and continue
+    if (currentScroll >= originalContentWidth - scrollAmount) {
+      row.style.scrollBehavior = 'auto';
+      row.scrollLeft = 0;
+      setTimeout(() => {
+        row.style.scrollBehavior = 'smooth';
+        row.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+        setTimeout(() => { isScrolling = false; }, 350);
+      }, 10);
+    } else {
+      row.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+      setTimeout(() => { isScrolling = false; }, 350);
+    }
   });
+  
+  // Scroll left
+  leftBtn.addEventListener('click', () => {
+    if (isScrolling) return;
+    isScrolling = true;
+    
+    const currentScroll = row.scrollLeft;
+    const originalContentWidth = getOriginalContentWidth();
+    
+    // If near the start, jump to end of original content and continue
+    if (currentScroll <= scrollAmount) {
+      row.style.scrollBehavior = 'auto';
+      row.scrollLeft = originalContentWidth;
+      setTimeout(() => {
+        row.style.scrollBehavior = 'smooth';
+        row.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+        setTimeout(() => { isScrolling = false; }, 350);
+      }, 10);
+    } else {
+      row.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+      setTimeout(() => { isScrolling = false; }, 350);
+    }
+  });
+  
+  // Handle scroll events for seamless looping (when user drags scrollbar or uses mouse wheel)
+  row.addEventListener('scroll', () => {
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(() => {
+      handleInfiniteScroll();
+    }, 100);
+  });
+  
+  // Initialize scroll position to a small offset to allow scrolling left
+  setTimeout(() => {
+    row.scrollLeft = 1;
+  }, 100);
 });
 
 // Genre filtering functionality
