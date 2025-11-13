@@ -620,10 +620,19 @@ function migrateShelfToRowsForSettings(shelf) {
   return shelf;
 }
 
-// Load and display slotted books with drag and drop support
+// Store Sortable instance for cleanup
+let sortableInstance = null;
+
+// Load and display slotted books with drag and drop support using SortableJS
 function loadSlottedBooks() {
   const slottedBooksList = document.getElementById('slotted-books-list');
   if (!slottedBooksList) return;
+
+  // Destroy existing Sortable instance if it exists
+  if (sortableInstance) {
+    sortableInstance.destroy();
+    sortableInstance = null;
+  }
 
   const shelves = JSON.parse(localStorage.getItem('shelves')) || [];
   const currentShelfId = localStorage.getItem('currentShelfId');
@@ -647,7 +656,6 @@ function loadSlottedBooks() {
   const allBooks = (currentShelf.rows || []).flatMap(row => row.books || []);
   
   // Always reset temp order when loading books (ensures all books are shown)
-  // This fixes the issue where only 1 book shows when there are multiple
   tempBookOrder = allBooks.map((book, index) => ({ book, originalIndex: index }));
   window.tempBookOrder = tempBookOrder;
   
@@ -658,180 +666,17 @@ function loadSlottedBooks() {
     return;
   }
   
-  // Use the container
-  const container = slottedBooksList;
-  
-  // Track drag state at module level (shared across all items)
-  let draggedItemIndex = null;
-  let draggedElement = null;
-  let dragOffset = { x: 0, y: 0 };
-  let isDragging = false;
+  // Track if a drag occurred to prevent navigation on click
   let hasDragged = false;
-
-  // Helper function to handle drop
-  function handleDrop(targetIndex, isSwap = false) {
-    if (draggedItemIndex === null || draggedItemIndex === targetIndex || !tempBookOrder) {
-      return false;
-    }
-    
-    if (isSwap) {
-      // Swap positions
-      const temp = tempBookOrder[draggedItemIndex];
-      tempBookOrder[draggedItemIndex] = tempBookOrder[targetIndex];
-      tempBookOrder[targetIndex] = temp;
-    } else {
-      // Insert at position
-      const [movedItem] = tempBookOrder.splice(draggedItemIndex, 1);
-      const newIndex = draggedItemIndex < targetIndex ? targetIndex - 1 : targetIndex;
-      tempBookOrder.splice(newIndex, 0, movedItem);
-    }
-    
-    window.tempBookOrder = tempBookOrder;
-    loadSlottedBooks();
-    checkForUnsavedChanges();
-    return true;
-  }
-
-  // Global mouse event handlers for drag and drop
-  function handleMouseMove(e) {
-    if (!isDragging || !draggedElement) return;
-    
-    e.preventDefault();
-    hasDragged = true;
-    
-    // Update dragged element position
-    draggedElement.style.position = 'fixed';
-    draggedElement.style.zIndex = '1000';
-    draggedElement.style.pointerEvents = 'none';
-    draggedElement.style.left = (e.clientX - dragOffset.x) + 'px';
-    draggedElement.style.top = (e.clientY - dragOffset.y) + 'px';
-    
-    // Find element under cursor
-    const elementBelow = document.elementFromPoint(e.clientX, e.clientY);
-    if (!elementBelow) return;
-    
-    // Check if over a book item (for swap)
-    const bookItem = elementBelow.closest('.slotted-book-item');
-    if (bookItem && bookItem !== draggedElement) {
-      const targetIndex = parseInt(bookItem.dataset.bookIndex);
-      if (targetIndex !== draggedItemIndex) {
-        // Remove swap-target from all items
-        document.querySelectorAll('.slotted-book-item').forEach(item => {
-          item.classList.remove('swap-target');
-        });
-        bookItem.classList.add('swap-target');
-      }
-    } else {
-      // Remove swap-target from all items
-      document.querySelectorAll('.slotted-book-item').forEach(item => {
-        item.classList.remove('swap-target');
-      });
-    }
-    
-    // Check if over a drop zone (for insert)
-    const dropZone = elementBelow.closest('.drop-zone');
-    if (dropZone) {
-      document.querySelectorAll('.drop-zone').forEach(zone => {
-        zone.classList.remove('drop-zone-active');
-      });
-      dropZone.classList.add('drop-zone-active');
-    } else {
-      document.querySelectorAll('.drop-zone').forEach(zone => {
-        zone.classList.remove('drop-zone-active');
-      });
-    }
-  }
-
-  function handleMouseUp(e) {
-    if (!isDragging) return;
-    
-    e.preventDefault();
-    isDragging = false;
-    
-    if (!draggedElement) {
-      resetDrag();
-      return;
-    }
-    
-    // Temporarily hide the dragged element to see what's underneath
-    const originalDisplay = draggedElement.style.display;
-    draggedElement.style.display = 'none';
-    
-    // Find element under cursor (now that dragged element is hidden)
-    const elementBelow = document.elementFromPoint(e.clientX, e.clientY);
-    
-    // Restore dragged element display
-    draggedElement.style.display = originalDisplay;
-    
-    if (!elementBelow) {
-      resetDrag();
-      return;
-    }
-    
-    // Check if dropped on a book item (swap)
-    const bookItem = elementBelow.closest('.slotted-book-item');
-    if (bookItem && bookItem !== draggedElement) {
-      const targetIndex = parseInt(bookItem.dataset.bookIndex);
-      if (!isNaN(targetIndex) && targetIndex !== draggedItemIndex) {
-        handleDrop(targetIndex, true);
-        resetDrag();
-        return;
-      }
-    }
-    
-    // Check if dropped on a drop zone (insert)
-    const dropZone = elementBelow.closest('.drop-zone');
-    if (dropZone) {
-      const targetIndex = parseInt(dropZone.dataset.insertIndex);
-      if (!isNaN(targetIndex) && targetIndex !== draggedItemIndex) {
-        handleDrop(targetIndex, false);
-        resetDrag();
-        return;
-      }
-    }
-    
-    // Dropped elsewhere - reset
-    resetDrag();
-  }
-
-  function resetDrag() {
-    if (draggedElement) {
-      draggedElement.style.position = '';
-      draggedElement.style.zIndex = '';
-      draggedElement.style.pointerEvents = '';
-      draggedElement.style.left = '';
-      draggedElement.style.top = '';
-      draggedElement.classList.remove('dragging');
-    }
-    
-    // Hide drop zones
-    document.querySelectorAll('.drop-zone').forEach(zone => {
-      zone.classList.remove('drop-zone-active');
-      zone.style.display = 'none';
-    });
-    
-    // Remove swap targets
-    document.querySelectorAll('.slotted-book-item').forEach(item => {
-      item.classList.remove('swap-target');
-    });
-    
-    container.classList.remove('dragging-active');
-    
-    draggedItemIndex = null;
-    draggedElement = null;
-    dragOffset = { x: 0, y: 0 };
-    
-    // Remove global listeners
-    document.removeEventListener('mousemove', handleMouseMove);
-    document.removeEventListener('mouseup', handleMouseUp);
-  }
-
-  // Create all book items first
-  const bookItems = tempBookOrder.map((item, displayIndex) => {
+  
+  // Create all book items
+  tempBookOrder.forEach((item, displayIndex) => {
     const book = item.book;
     const bookItem = document.createElement('div');
     bookItem.className = 'slotted-book-item';
     bookItem.dataset.bookIndex = displayIndex;
+    // Store the book data directly on the element for easy retrieval
+    bookItem._bookData = item;
     
     const img = document.createElement('img');
     img.src = book.img || book.image || '';
@@ -849,8 +694,9 @@ function loadSlottedBooks() {
     removeBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       e.preventDefault();
-      if (tempBookOrder) {
-        tempBookOrder.splice(displayIndex, 1);
+      const currentIndex = Array.from(slottedBooksList.children).indexOf(bookItem);
+      if (tempBookOrder && currentIndex >= 0) {
+        tempBookOrder.splice(currentIndex, 1);
         loadSlottedBooks();
         checkForUnsavedChanges();
       }
@@ -858,42 +704,6 @@ function loadSlottedBooks() {
     
     bookItem.appendChild(img);
     bookItem.appendChild(removeBtn);
-    
-    // Mouse-based drag handlers
-    bookItem.addEventListener('mousedown', function(e) {
-      // Don't start drag if clicking remove button
-      if (e.target.classList.contains('remove-btn')) {
-        return;
-      }
-      
-      isDragging = true;
-      hasDragged = false;
-      draggedItemIndex = displayIndex;
-      draggedElement = this;
-      
-      // Calculate offset from mouse to element
-      const rect = this.getBoundingClientRect();
-      dragOffset.x = e.clientX - rect.left;
-      dragOffset.y = e.clientY - rect.top;
-      
-      // Add dragging class
-      this.classList.add('dragging');
-      
-      // Show drop zones
-      document.querySelectorAll('.drop-zone').forEach(zone => {
-        zone.style.display = 'flex';
-        zone.style.minHeight = '60px';
-      });
-      
-      // Prevent wrapping
-      container.classList.add('dragging-active');
-      
-      // Add global mouse listeners
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      
-      e.preventDefault();
-    });
     
     // Click handler - only navigate if no drag occurred
     bookItem.addEventListener('click', function(e) {
@@ -904,28 +714,90 @@ function loadSlottedBooks() {
       hasDragged = false;
     });
     
-    return { bookItem, displayIndex, book };
-  });
-
-  // Add drop zones and book items to container
-  bookItems.forEach(({ bookItem, displayIndex, book }, idx) => {
-    // Add drop zone before this item (except before first)
-    if (idx > 0) {
-      const dropZone = document.createElement('div');
-      dropZone.className = 'drop-zone';
-      dropZone.dataset.insertIndex = displayIndex;
-      container.appendChild(dropZone);
-    }
-    
-    container.appendChild(bookItem);
+    slottedBooksList.appendChild(bookItem);
   });
   
-  // Add drop zone after last item
-  if (bookItems.length > 0) {
-    const dropZone = document.createElement('div');
-    dropZone.className = 'drop-zone';
-    dropZone.dataset.insertIndex = tempBookOrder.length;
-    container.appendChild(dropZone);
+  // Initialize SortableJS
+  if (typeof Sortable !== 'undefined') {
+    sortableInstance = new Sortable(slottedBooksList, {
+      animation: 200,
+      easing: 'cubic-bezier(1, 0, 0, 1)',
+      filter: '.remove-btn', // Prevent dragging when clicking remove button
+      preventOnFilter: true,
+      direction: 'horizontal', // Horizontal layout
+      ghostClass: 'sortable-ghost', // Class for the ghost element
+      chosenClass: 'sortable-chosen', // Class for the chosen item
+      dragClass: 'sortable-drag', // Class for the dragged item
+      forceFallback: true, // Use fallback for better cross-browser support
+      fallbackOnBody: true, // Append dragged element to body
+      swapThreshold: 0.65, // Threshold for swap vs insert (0.65 = 65% overlap triggers swap)
+      invertSwap: true, // Invert swap direction
+      group: 'books', // Group name for potential multi-list support
+      draggable: '.slotted-book-item', // Only allow dragging book items
+      
+      onStart: function(evt) {
+        hasDragged = false;
+        // Add visual feedback
+        evt.item.classList.add('sortable-dragging');
+      },
+      
+      onMove: function(evt) {
+        hasDragged = true;
+        // Show visual feedback for drop zones
+        const related = evt.related;
+        if (related) {
+          related.classList.add('sortable-drop-target');
+        }
+        return true; // Allow move
+      },
+      
+      onEnd: function(evt) {
+        hasDragged = true;
+        // Remove visual feedback classes
+        document.querySelectorAll('.sortable-drop-target').forEach(el => {
+          el.classList.remove('sortable-drop-target');
+        });
+        evt.item.classList.remove('sortable-dragging');
+        
+        // Update tempBookOrder based on new DOM order
+        const newOrder = [];
+        Array.from(slottedBooksList.children).forEach((child) => {
+          if (child._bookData) {
+            newOrder.push(child._bookData);
+          }
+        });
+        
+        // Only update if order actually changed
+        if (newOrder.length === tempBookOrder.length) {
+          let orderChanged = false;
+          for (let i = 0; i < newOrder.length; i++) {
+            if (newOrder[i] !== tempBookOrder[i]) {
+              orderChanged = true;
+              break;
+            }
+          }
+          
+          if (orderChanged) {
+            tempBookOrder = newOrder;
+            window.tempBookOrder = tempBookOrder;
+            
+            // Update data-book-index attributes to match new order
+            Array.from(slottedBooksList.children).forEach((child, index) => {
+              child.dataset.bookIndex = index;
+            });
+            
+            checkForUnsavedChanges();
+          }
+        }
+        
+        // Reset hasDragged after a short delay to allow click events
+        setTimeout(() => {
+          hasDragged = false;
+        }, 100);
+      }
+    });
+  } else {
+    console.error('SortableJS library not loaded');
   }
   
   // Update current shelf name in settings
