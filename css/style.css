@@ -248,7 +248,7 @@ nav a.active {
 
 .featured-book-image {
   flex: 1;
-  min-height: 500px;
+  min-height: 400px; /* 10% smaller (was 500px) */
   position: relative;
   overflow: hidden;
   display: flex;
@@ -259,7 +259,7 @@ nav a.active {
 .featured-book-image img {
   width: 100%;
   height: 100%;
-  min-height: 500px;
+  min-height: 400px; /* 10% smaller (was 500px) */
   object-fit: cover;
   transition: transform 0.3s ease;
 }
@@ -377,11 +377,11 @@ main {
   }
   
   .featured-book-image {
-    min-height: 400px;
+    min-height: 360px; /* 10% smaller (was 400px) */
   }
   
   .featured-book-image img {
-    min-height: 400px;
+    min-height: 360px; /* 10% smaller (was 400px) */
   }
   
   .featured-book-title {
@@ -395,11 +395,11 @@ main {
   }
   
   .featured-book-image {
-    min-height: 350px;
+    min-height: 280px; /* 10% smaller (was 350px) */
   }
   
   .featured-book-image img {
-    min-height: 350px;
+    min-height: 280px; /* 10% smaller (was 350px) */
   }
   
   .featured-book-info {

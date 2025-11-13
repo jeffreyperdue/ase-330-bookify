@@ -163,8 +163,9 @@
   align-items: flex-start;
   min-height: 400px;
   margin-bottom: 100px;
+  margin-left: 30px; /* Move shelf away from left navigation */
   overflow-x: auto;
-  width: 100%;
+  width: calc(100% - 30px); /* Adjust width to account for margin */
   /* Hide scrollbar */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
