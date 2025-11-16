@@ -1,79 +1,204 @@
-const bookData = {
-  suggested: [
-    { title: "The Midnight Library", img: "https://covers.openlibrary.org/b/id/10556125-L.jpg" },
-    { title: "Project Hail Mary", img: "https://covers.openlibrary.org/b/id/10958365-L.jpg" },
-    { title: "The Song of Achilles", img: "https://covers.openlibrary.org/b/id/8275261-L.jpg" },
-    { title: "Dune", img: "https://covers.openlibrary.org/b/id/8108694-L.jpg" },
-    { title: "Circe", img: "https://covers.openlibrary.org/b/id/8942926-L.jpg" },
-    { title: "The Silent Patient", img: "https://covers.openlibrary.org/b/id/8944288-L.jpg" },
-    { title: "Addie LaRue", img: "https://covers.openlibrary.org/b/id/10317549-L.jpg" },
-    { title: "A Man Called Ove", img: "https://covers.openlibrary.org/b/id/8228696-L.jpg" }
-  ],
-  featured: [
-    { title: "The Midnight Library", img: "https://covers.openlibrary.org/b/id/10556125-L.jpg" },
-    { title: "Project Hail Mary", img: "https://covers.openlibrary.org/b/id/10958365-L.jpg" }
-  ],
-  fantasy: [
-    { title: "A Court of Thorns and Roses", img: "https://covers.openlibrary.org/b/id/10194747-L.jpg" },
-    { title: "The Hobbit", img: "https://covers.openlibrary.org/b/id/6979861-L.jpg" },
-    { title: "Throne of Glass", img: "https://covers.openlibrary.org/b/id/8235115-L.jpg" },
-    { title: "The Name of the Wind", img: "https://covers.openlibrary.org/b/id/240726-L.jpg" },
-    { title: "Mistborn", img: "https://covers.openlibrary.org/b/id/8757278-L.jpg" },
-    { title: "The Way of Kings", img: "https://covers.openlibrary.org/b/id/7630455-L.jpg" },
-    { title: "Six of Crows", img: "https://covers.openlibrary.org/b/id/8375046-L.jpg" },
-    { title: "The Priory of the Orange Tree", img: "https://covers.openlibrary.org/b/id/10050659-L.jpg" }
-  ],
-  horror: [
-    { title: "It", img: "https://covers.openlibrary.org/b/id/10540315-L.jpg" },
-    { title: "The Shining", img: "https://covers.openlibrary.org/b/id/11162659-L.jpg" },
-    { title: "Mexican Gothic", img: "https://covers.openlibrary.org/b/id/10602427-L.jpg" },
-    { title: "Bird Box", img: "https://covers.openlibrary.org/b/id/8393986-L.jpg" },
-    { title: "Dracula", img: "https://covers.openlibrary.org/b/id/10995125-L.jpg" },
-    { title: "Frankenstein", img: "https://covers.openlibrary.org/b/id/11281755-L.jpg" },
-    { title: "Coraline", img: "https://covers.openlibrary.org/b/id/9445262-L.jpg" },
-    { title: "The Haunting of Hill House", img: "https://covers.openlibrary.org/b/id/8142271-L.jpg" }
-  ],
-  romance: [
-    { title: "Pride and Prejudice", img: "https://covers.openlibrary.org/b/id/8081536-L.jpg" },
-    { title: "The Love Hypothesis", img: "https://covers.openlibrary.org/b/id/12687146-L.jpg" },
-    { title: "Beach Read", img: "https://covers.openlibrary.org/b/id/10555174-L.jpg" },
-    { title: "Twilight", img: "https://covers.openlibrary.org/b/id/7884866-L.jpg" },
-    { title: "Me Before You", img: "https://covers.openlibrary.org/b/id/8317743-L.jpg" },
-    { title: "The Notebook", img: "https://covers.openlibrary.org/b/id/8223056-L.jpg" },
-    { title: "Red, White & Royal Blue", img: "https://covers.openlibrary.org/b/id/9876860-L.jpg" },
-    { title: "To All the Boys I've Loved Before", img: "https://covers.openlibrary.org/b/id/8160827-L.jpg" }
-  ],
-  mystery: [
-    { title: "Gone Girl", img: "https://covers.openlibrary.org/b/id/7884972-L.jpg" },
-    { title: "The Girl with the Dragon Tattoo", img: "https://covers.openlibrary.org/b/id/8215263-L.jpg" },
-    { title: "Big Little Lies", img: "https://covers.openlibrary.org/b/id/8317096-L.jpg" },
-    { title: "In the Woods", img: "https://covers.openlibrary.org/b/id/7915984-L.jpg" },
-    { title: "Sharp Objects", img: "https://covers.openlibrary.org/b/id/7916039-L.jpg" },
-    { title: "The Da Vinci Code", img: "https://covers.openlibrary.org/b/id/8221255-L.jpg" },
-    { title: "The Couple Next Door", img: "https://covers.openlibrary.org/b/id/8703735-L.jpg" },
-    { title: "The Girl on the Train", img: "https://covers.openlibrary.org/b/id/8226763-L.jpg" }
-  ],
-  scifi: [
-    { title: "Ender's Game", img: "https://covers.openlibrary.org/b/id/8231112-L.jpg" },
-    { title: "Neuromancer", img: "https://covers.openlibrary.org/b/id/10935042-L.jpg" },
-    { title: "Snow Crash", img: "https://covers.openlibrary.org/b/id/10538634-L.jpg" },
-    { title: "Ready Player One", img: "https://covers.openlibrary.org/b/id/8160951-L.jpg" },
-    { title: "The Martian", img: "https://covers.openlibrary.org/b/id/8281993-L.jpg" },
-    { title: "Hyperion", img: "https://covers.openlibrary.org/b/id/10819545-L.jpg" },
-    { title: "Children of Time", img: "https://covers.openlibrary.org/b/id/11235935-L.jpg" },
-    { title: "Recursion", img: "https://covers.openlibrary.org/b/id/10226291-L.jpg" }
-  ],
-  nonfiction: [
-    { title: "Educated", img: "https://covers.openlibrary.org/b/id/8955639-L.jpg" },
-    { title: "Becoming", img: "https://covers.openlibrary.org/b/id/9131701-L.jpg" },
-    { title: "Sapiens", img: "https://covers.openlibrary.org/b/id/8372423-L.jpg" },
-    { title: "Atomic Habits", img: "https://covers.openlibrary.org/b/id/9870248-L.jpg" },
-    { title: "The Power of Habit", img: "https://covers.openlibrary.org/b/id/8233309-L.jpg" },
-    { title: "Can't Hurt Me", img: "https://covers.openlibrary.org/b/id/8719031-L.jpg" },
-    { title: "Outliers", img: "https://covers.openlibrary.org/b/id/8232030-L.jpg" },
-    { title: "Thinking, Fast and Slow", img: "https://covers.openlibrary.org/b/id/8319695-L.jpg" }
-  ]
+async function fetchGoogleBooks(query, maxResults = 15) {
+  const url = `https://www.googleapis.com/books/v1/volumes`
+    + `?q=${encodeURIComponent(query)}`
+    + `&maxResults=${maxResults}`
+    + `&orderBy=relevance`
+    + `&printType=books`
+    + `&langRestrict=en`;
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    return data.items || [];
+  } catch (err) {
+    console.error("Google API error:", err);
+    return [];
+  }
 };
+
+const bookData = {
+  suggested: [],
+  featured: [],
+  fantasy: [],
+  horror: [],
+  romance: [],
+  mystery: [],
+  scifi: [],
+  nonfiction: []
+};
+
+async function loadAllCategories() {
+  const queries = {
+    suggested: [
+      "bestseller fiction 2024",
+      "Colleen Hoover",
+      "Rebecca Yarros",
+      "popular novel 2023"
+    ],
+    fantasy: [
+      "Patrick Rothfuss",
+      "Rebecca Yarros Fourth Wing",
+      "Brandon Sanderson",
+      "epic fantasy bestseller"
+    ],
+    romance: [
+      "Colleen Hoover",
+      "Emily Henry",
+      "Ali Hazelwood",
+      "contemporary romance bestseller"
+    ],
+    mystery: [
+      "Freida McFadden",
+      "Ruth Ware",
+      "Riley Sager",
+      "psychological thriller bestseller"
+    ],
+    scifi: [
+      "Pierce Brown",
+      "Suzanne Collins",
+      "Andy Weir",
+      "dystopian bestseller"
+    ],
+    horror: [
+      "Stephen King",
+      "Grady Hendrix",
+      "Riley Sager horror",
+      "dark thriller bestseller"
+    ],
+    nonfiction: [
+      "James Clear",
+      "Michelle Obama",
+      "Malcolm Gladwell",
+      "self help bestseller"
+    ]
+  };
+
+  for (const [category, queryList] of Object.entries(queries)) {
+    let allBooks = [];
+    
+    // Fetch all queries in parallel for speed
+    const bookPromises = queryList.map(query => fetchGoogleBooks(query, 10));
+    const bookResults = await Promise.all(bookPromises);
+    
+    // Combine all results
+    allBooks = bookResults.flat();
+    
+    let books = allBooks;
+
+    // Only keep books with a valid image
+    books = books.filter(b => b.volumeInfo.imageLinks?.thumbnail || b.volumeInfo.imageLinks?.smallThumbnail);
+
+    // Deduplicate by title
+    const seenTitles = new Set();
+    books = books.filter(b => {
+      if (!b.volumeInfo.title) return false; // Skip books without titles
+      const title = b.volumeInfo.title.trim().toLowerCase();
+      if (seenTitles.has(title)) return false;
+      seenTitles.add(title);
+      return true;
+    });
+    
+    console.log(`${category}: ${books.length} after deduplication`);
+
+    // Very loose filtering - just exclude obvious trash
+    books = books.filter(b => {
+      const info = b.volumeInfo;
+      const title = (info.title || "").toLowerCase();
+      
+      // Only exclude the worst offenders and market books
+      // Removed "guide" to stop blocking romance guides that are actual novels
+      const blacklist = ["sparknotes", "cliffsnotes", "writer's market", "writers market", "summary"];
+      
+      const hasBlacklisted = blacklist.some(word => title.includes(word));
+      
+      // Just need a title and author
+      const hasBasics = info.title && info.authors;
+      
+      // Debug for romance category
+      if (category === 'romance' && (!hasBasics || hasBlacklisted)) {
+        console.log(`Filtered out: "${info.title}" - hasBasics: ${hasBasics}, blacklisted: ${hasBlacklisted}`);
+      }
+      
+      return !hasBlacklisted && hasBasics;
+    });
+    
+    console.log(`${category}: ${books.length} after blacklist filter`);
+
+    // Sort by actual popularity (ratings * average rating)
+    books.sort((a, b) => {
+      const ratingA = (a.volumeInfo.ratingsCount || 0) * (a.volumeInfo.averageRating || 0);
+      const ratingB = (b.volumeInfo.ratingsCount || 0) * (b.volumeInfo.averageRating || 0);
+      return ratingB - ratingA;
+    });
+
+    // Take top 20 after filtering and sorting
+    books = books.slice(0, 20);
+
+    bookData[category] = books.map(b => {
+      const img = b.volumeInfo.imageLinks?.thumbnail || b.volumeInfo.imageLinks?.smallThumbnail;
+      return {
+        title: b.volumeInfo.title,
+        img: img,
+        authors: b.volumeInfo.authors || ["Unknown"],
+        description: b.volumeInfo.description || "No description.",
+        id: b.id
+      };
+    });
+  }
+
+  // Pick first 2 as featured
+  bookData.featured = bookData.suggested.slice(0, 2);
+
+  renderAllBooks();
+}
+
+
+function renderAllBooks() {
+  // Render featured
+  renderFeaturedBooks();
+
+  // Render categories (your full loop stays exactly the same)
+  Object.keys(bookData).forEach(category => {
+    if (category === 'featured') return;
+
+    const container = document.getElementById(category);
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    const books = [];
+    bookData[category].forEach(book => {
+      const div = document.createElement("div");
+      div.classList.add("book");
+      div.innerHTML = `
+        <img src="${book.img}" alt="${book.title}">
+        <p>${book.title}</p>
+      `;
+
+      // Open detail page
+      div.addEventListener("click", () => {
+        localStorage.setItem("selectedBook", JSON.stringify(book));
+        window.location.href = "book.html";
+      });
+
+      container.appendChild(div);
+      books.push({ element: div, book });
+    });
+
+    // Duplicate for infinite scroll
+    books.forEach(({ element, book }) => {
+      const clone = element.cloneNode(true);
+      clone.addEventListener("click", () => {
+        localStorage.setItem("selectedBook", JSON.stringify(book));
+        window.location.href = "book.html";
+      });
+      container.appendChild(clone);
+    });
+  });
+
+  // Re-enable infinite scroll behavior
+  initializeInfiniteScroll();
+}
 
 // Render featured books in hero section
 function renderFeaturedBooks() {
@@ -115,54 +240,11 @@ function renderFeaturedBooks() {
   }
 }
 
-// Render books with infinite loop support
-Object.keys(bookData).forEach(category => {
-  // Skip featured category as it's handled separately
-  if (category === 'featured') return;
-  
-  const container = document.getElementById(category);
-  if (container) {
-    // Clear container first
-    container.innerHTML = '';
-    
-    // Create original books
-    const books = [];
-    bookData[category].forEach(book => {
-      const div = document.createElement("div");
-      div.classList.add("book");
-      div.innerHTML = `
-        <img src="${book.img}" alt="${book.title}">
-        <p>${book.title}</p>
-      `;
-
-      // Add click event
-      div.addEventListener('click', () => {
-        localStorage.setItem('selectedBook', JSON.stringify(book));
-        window.location.href = 'book.html';
-      });
-
-      container.appendChild(div);
-      books.push({ element: div, book: book });
-    });
-    
-    // Duplicate books for infinite loop (add at the end)
-    books.forEach(({ element, book }) => {
-      const clone = element.cloneNode(true);
-      // Re-add click event to clone
-      clone.addEventListener('click', () => {
-        localStorage.setItem('selectedBook', JSON.stringify(book));
-        window.location.href = 'book.html';
-      });
-      container.appendChild(clone);
-    });
-  }
-});
-
-// Render featured books
-renderFeaturedBooks();
+loadAllCategories();
 
 // Infinite loop scroll functionality
-document.querySelectorAll('.row-container').forEach(container => {
+function initializeInfiniteScroll() {
+  document.querySelectorAll('.row-container').forEach(container => {
   const row = container.querySelector('.book-row');
   const leftBtn = container.querySelector('.scroll-left');
   const rightBtn = container.querySelector('.scroll-right');
@@ -268,7 +350,8 @@ document.querySelectorAll('.row-container').forEach(container => {
   setTimeout(() => {
     row.scrollLeft = 1;
   }, 100);
-});
+  });
+}
 
 // Genre filtering functionality
 const sidebarButtons = document.querySelectorAll('.sidebar button');
