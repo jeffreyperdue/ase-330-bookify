@@ -1,3 +1,58 @@
+// Cache configuration - 24 hours
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+const CACHE_KEY_PREFIX = 'bookify_cache_';
+const CACHE_TIMESTAMP_PREFIX = 'bookify_cache_timestamp_';
+
+// Cache helper functions
+function getCachedData(category) {
+  try {
+    const cached = localStorage.getItem(CACHE_KEY_PREFIX + category);
+    const timestamp = localStorage.getItem(CACHE_TIMESTAMP_PREFIX + category);
+    
+    if (cached && timestamp) {
+      const age = Date.now() - parseInt(timestamp);
+      if (age < CACHE_DURATION) {
+        console.log(`Using cached data for ${category} (${Math.round(age / 1000 / 60)} minutes old)`);
+        return JSON.parse(cached);
+      } else {
+        // Cache expired, remove it
+        localStorage.removeItem(CACHE_KEY_PREFIX + category);
+        localStorage.removeItem(CACHE_TIMESTAMP_PREFIX + category);
+      }
+    }
+  } catch (err) {
+    console.error('Error reading cache:', err);
+  }
+  return null;
+}
+
+function setCachedData(category, data) {
+  try {
+    localStorage.setItem(CACHE_KEY_PREFIX + category, JSON.stringify(data));
+    localStorage.setItem(CACHE_TIMESTAMP_PREFIX + category, Date.now().toString());
+  } catch (err) {
+    console.error('Error saving cache:', err);
+  }
+}
+
+// Show loading indicator for a category
+function showLoadingIndicator(category) {
+  const container = document.getElementById(category);
+  if (container) {
+    container.innerHTML = '<div class="loading-indicator"><i class="fas fa-spinner fa-spin"></i> Loading books...</div>';
+    // Add loading class for styling
+    container.classList.add('loading');
+  }
+}
+
+// Hide loading indicator
+function hideLoadingIndicator(category) {
+  const container = document.getElementById(category);
+  if (container) {
+    container.classList.remove('loading');
+  }
+}
+
 async function fetchGoogleBooks(query, maxResults = 15) {
   const url = `https://www.googleapis.com/books/v1/volumes`
     + `?q=${encodeURIComponent(query)}`
@@ -26,6 +81,122 @@ const bookData = {
   scifi: [],
   nonfiction: []
 };
+
+// Process and filter books for a category
+function processBooksForCategory(rawBooks, category) {
+  let books = rawBooks;
+
+  // Only keep books with a valid image
+  books = books.filter(b => b.volumeInfo.imageLinks?.thumbnail || b.volumeInfo.imageLinks?.smallThumbnail);
+
+  // Deduplicate by title
+  const seenTitles = new Set();
+  books = books.filter(b => {
+    if (!b.volumeInfo.title) return false; // Skip books without titles
+    const title = b.volumeInfo.title.trim().toLowerCase();
+    if (seenTitles.has(title)) return false;
+    seenTitles.add(title);
+    return true;
+  });
+  
+  console.log(`${category}: ${books.length} after deduplication`);
+
+  // Very loose filtering - just exclude obvious trash
+  books = books.filter(b => {
+    const info = b.volumeInfo;
+    const title = (info.title || "").toLowerCase();
+    
+    // Only exclude the worst offenders and market books
+    // Removed "guide" to stop blocking romance guides that are actual novels
+    const blacklist = ["sparknotes", "cliffsnotes", "writer's market", "writers market", "summary"];
+    
+    const hasBlacklisted = blacklist.some(word => title.includes(word));
+    
+    // Just need a title and author
+    const hasBasics = info.title && info.authors;
+    
+    // Debug for romance category
+    if (category === 'romance' && (!hasBasics || hasBlacklisted)) {
+      console.log(`Filtered out: "${info.title}" - hasBasics: ${hasBasics}, blacklisted: ${hasBlacklisted}`);
+    }
+    
+    return !hasBlacklisted && hasBasics;
+  });
+  
+  console.log(`${category}: ${books.length} after blacklist filter`);
+
+  // Sort by actual popularity (ratings * average rating)
+  books.sort((a, b) => {
+    const ratingA = (a.volumeInfo.ratingsCount || 0) * (a.volumeInfo.averageRating || 0);
+    const ratingB = (b.volumeInfo.ratingsCount || 0) * (b.volumeInfo.averageRating || 0);
+    return ratingB - ratingA;
+  });
+
+  // Take top 20 after filtering and sorting
+  books = books.slice(0, 20);
+
+  return books.map(b => {
+    const img = b.volumeInfo.imageLinks?.thumbnail || b.volumeInfo.imageLinks?.smallThumbnail;
+    return {
+      title: b.volumeInfo.title,
+      img: img,
+      authors: b.volumeInfo.authors || ["Unknown"],
+      description: b.volumeInfo.description || "No description.",
+      id: b.id
+    };
+  });
+}
+
+// Load a single category (with caching and progressive rendering)
+async function loadCategory(category, queryList) {
+  // Show loading indicator
+  showLoadingIndicator(category);
+  
+  // Check cache first
+  const cached = getCachedData(category);
+  if (cached) {
+    bookData[category] = cached;
+    renderCategory(category);
+    hideLoadingIndicator(category);
+    return;
+  }
+  
+  // Fetch from API
+  try {
+    // Fetch all queries in parallel for speed
+    const bookPromises = queryList.map(query => fetchGoogleBooks(query, 10));
+    const bookResults = await Promise.all(bookPromises);
+    
+    // Combine all results
+    const allBooks = bookResults.flat();
+    
+    // Process and filter
+    const processedBooks = processBooksForCategory(allBooks, category);
+    
+    // Store in bookData
+    bookData[category] = processedBooks;
+    
+    // Cache the results
+    setCachedData(category, processedBooks);
+    
+    // Render immediately (progressive rendering)
+    renderCategory(category);
+    hideLoadingIndicator(category);
+    
+    // Update featured if this is the suggested category
+    if (category === 'suggested' && processedBooks.length >= 2) {
+      bookData.featured = processedBooks.slice(0, 2);
+      renderFeaturedBooks();
+    }
+  } catch (err) {
+    console.error(`Error loading category ${category}:`, err);
+    hideLoadingIndicator(category);
+    const container = document.getElementById(category);
+    if (container) {
+      container.innerHTML = '<div class="error-message">Failed to load books. Please try again later.</div>';
+    }
+  }
+}
 
 async function loadAllCategories() {
   const queries = {
@@ -73,127 +244,78 @@ async function loadAllCategories() {
     ]
   };
 
-  for (const [category, queryList] of Object.entries(queries)) {
-    let allBooks = [];
-    
-    // Fetch all queries in parallel for speed
-    const bookPromises = queryList.map(query => fetchGoogleBooks(query, 10));
-    const bookResults = await Promise.all(bookPromises);
-    
-    // Combine all results
-    allBooks = bookResults.flat();
-    
-    let books = allBooks;
-
-    // Only keep books with a valid image
-    books = books.filter(b => b.volumeInfo.imageLinks?.thumbnail || b.volumeInfo.imageLinks?.smallThumbnail);
-
-    // Deduplicate by title
-    const seenTitles = new Set();
-    books = books.filter(b => {
-      if (!b.volumeInfo.title) return false; // Skip books without titles
-      const title = b.volumeInfo.title.trim().toLowerCase();
-      if (seenTitles.has(title)) return false;
-      seenTitles.add(title);
-      return true;
-    });
-    
-    console.log(`${category}: ${books.length} after deduplication`);
-
-    // Very loose filtering - just exclude obvious trash
-    books = books.filter(b => {
-      const info = b.volumeInfo;
-      const title = (info.title || "").toLowerCase();
-      
-      // Only exclude the worst offenders and market books
-      // Removed "guide" to stop blocking romance guides that are actual novels
-      const blacklist = ["sparknotes", "cliffsnotes", "writer's market", "writers market", "summary"];
-      
-      const hasBlacklisted = blacklist.some(word => title.includes(word));
-      
-      // Just need a title and author
-      const hasBasics = info.title && info.authors;
-      
-      // Debug for romance category
-      if (category === 'romance' && (!hasBasics || hasBlacklisted)) {
-        console.log(`Filtered out: "${info.title}" - hasBasics: ${hasBasics}, blacklisted: ${hasBlacklisted}`);
-      }
-      
-      return !hasBlacklisted && hasBasics;
-    });
-    
-    console.log(`${category}: ${books.length} after blacklist filter`);
-
-    // Sort by actual popularity (ratings * average rating)
-    books.sort((a, b) => {
-      const ratingA = (a.volumeInfo.ratingsCount || 0) * (a.volumeInfo.averageRating || 0);
-      const ratingB = (b.volumeInfo.ratingsCount || 0) * (b.volumeInfo.averageRating || 0);
-      return ratingB - ratingA;
-    });
-
-    // Take top 20 after filtering and sorting
-    books = books.slice(0, 20);
-
-    bookData[category] = books.map(b => {
-      const img = b.volumeInfo.imageLinks?.thumbnail || b.volumeInfo.imageLinks?.smallThumbnail;
-      return {
-        title: b.volumeInfo.title,
-        img: img,
-        authors: b.volumeInfo.authors || ["Unknown"],
-        description: b.volumeInfo.description || "No description.",
-        id: b.id
-      };
-    });
+  // Load all categories in parallel for maximum speed
+  const categoryPromises = Object.entries(queries).map(([category, queryList]) => 
+    loadCategory(category, queryList)
+  );
+  
+  // Wait for all categories to load (they render progressively as they complete)
+  await Promise.all(categoryPromises);
+  
+  // Ensure featured is set if suggested loaded
+  if (bookData.suggested.length >= 2 && bookData.featured.length === 0) {
+    bookData.featured = bookData.suggested.slice(0, 2);
+    renderFeaturedBooks();
   }
-
-  // Pick first 2 as featured
-  bookData.featured = bookData.suggested.slice(0, 2);
-
-  renderAllBooks();
+  
+  // Re-enable infinite scroll for all categories
+  initializeInfiniteScroll();
 }
 
+
+// Render a single category (used for progressive rendering)
+function renderCategory(category) {
+  if (category === 'featured') return;
+  
+  const container = document.getElementById(category);
+  if (!container) return;
+
+  const books = bookData[category];
+  if (!books || books.length === 0) return;
+
+  container.innerHTML = '';
+
+  const bookElements = [];
+  books.forEach(book => {
+    const div = document.createElement("div");
+    div.classList.add("book");
+    div.innerHTML = `
+      <img src="${book.img}" alt="${book.title}">
+      <p>${book.title}</p>
+    `;
+
+    // Open detail page
+    div.addEventListener("click", () => {
+      localStorage.setItem("selectedBook", JSON.stringify(book));
+      window.location.href = "book.html";
+    });
+
+    container.appendChild(div);
+    bookElements.push({ element: div, book });
+  });
+
+  // Duplicate for infinite scroll
+  bookElements.forEach(({ element, book }) => {
+    const clone = element.cloneNode(true);
+    clone.addEventListener("click", () => {
+      localStorage.setItem("selectedBook", JSON.stringify(book));
+      window.location.href = "book.html";
+    });
+    container.appendChild(clone);
+  });
+  
+  // Re-initialize infinite scroll for this category
+  initializeInfiniteScroll();
+}
 
 function renderAllBooks() {
   // Render featured
   renderFeaturedBooks();
 
-  // Render categories (your full loop stays exactly the same)
+  // Render all categories
   Object.keys(bookData).forEach(category => {
     if (category === 'featured') return;
-
-    const container = document.getElementById(category);
-    if (!container) return;
-
-    container.innerHTML = '';
-
-    const books = [];
-    bookData[category].forEach(book => {
-      const div = document.createElement("div");
-      div.classList.add("book");
-      div.innerHTML = `
-        <img src="${book.img}" alt="${book.title}">
-        <p>${book.title}</p>
-      `;
-
-      // Open detail page
-      div.addEventListener("click", () => {
-        localStorage.setItem("selectedBook", JSON.stringify(book));
-        window.location.href = "book.html";
-      });
-
-      container.appendChild(div);
-      books.push({ element: div, book });
-    });
-
-    // Duplicate for infinite scroll
-    books.forEach(({ element, book }) => {
-      const clone = element.cloneNode(true);
-      clone.addEventListener("click", () => {
-        localStorage.setItem("selectedBook", JSON.stringify(book));
-        window.location.href = "book.html";
-      });
-      container.appendChild(clone);
-    });
+    renderCategory(category);
   });
 
   // Re-enable infinite scroll behavior

@@ -364,6 +364,37 @@ main {
   cursor: pointer;
 }
 
+/* === LOADING INDICATORS === */
+.loading-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 20px;
+  color: #ccc;
+  font-family: 'Poppins', sans-serif;
+  font-size: 1rem;
+}
+
+.loading-indicator .fa-spinner {
+  font-size: 1.5rem;
+  color: #e50914;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-message {
+  padding: 40px 20px;
+  text-align: center;
+  color: #e50914;
+  font-family: 'Poppins', sans-serif;
+  font-size: 1rem;
+}
+
 /* === RESPONSIVE DESIGN === */
 @media (max-width: 900px) {
   .hero-section {
