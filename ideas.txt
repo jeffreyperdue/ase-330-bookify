@@ -9,3 +9,4 @@ allow users to potentially add a day finished for each book added to their shelv
 let users set a book goal, like i want to read 12 books this year, and there can be a progress bar for that as well
 when pressing on side nav bar genres, i think it should switch from horizontal scroll to a page that will have rows of books
 search should present movies in a list with a nice size pic of the cover, short description, and maybe page count or rating?
+look into letting users change their bookshelves from being front covers to the spine, maybe they can choose individual books to be front facing or spine facing
