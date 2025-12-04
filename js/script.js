@@ -270,6 +270,9 @@ async function loadAllCategories() {
   
   // Rebuild search cache after all books are loaded
   buildBooksCache();
+  
+  // Fetch additional books for micro-genre generation in background
+  fetchMicroGenreBooks();
 }
 
 
@@ -527,6 +530,819 @@ sidebarButtons.forEach(button => {
     }
   });
 });
+
+// ========== MICRO-GENRE BOOK FETCHING ==========
+
+// Additional diverse queries for micro-genre generation
+const microGenreQueries = [
+  // Diverse fiction
+  "bestseller fiction 2023", "bestseller fiction 2024", "award winning fiction",
+  "literary fiction", "contemporary fiction", "historical fiction",
+  // Romance variations
+  "contemporary romance", "historical romance", "paranormal romance",
+  "romantic comedy", "second chance romance", "enemies to lovers romance",
+  // Fantasy variations
+  "epic fantasy", "urban fantasy", "young adult fantasy", "dark fantasy",
+  "magical realism", "fairy tale retellings",
+  // Thriller/Mystery variations
+  "psychological thriller", "domestic thriller", "legal thriller",
+  "spy thriller", "crime fiction", "detective novels",
+  // Horror variations
+  "supernatural horror", "psychological horror", "gothic horror",
+  "paranormal fiction", "ghost stories",
+  // Sci-Fi variations
+  "space opera", "dystopian fiction", "cyberpunk", "time travel",
+  "alternate history", "scientific fiction",
+  // Non-fiction variations
+  "memoir", "biography", "self help", "business books",
+  "history books", "science books", "philosophy books",
+  // Popular authors (diverse)
+  "Taylor Jenkins Reid", "Sally Rooney", "Madeline Miller", "Celeste Ng",
+  "Zadie Smith", "Donna Tartt", "Kazuo Ishiguro", "Maggie O'Farrell",
+  "Tana French", "Gillian Flynn", "Paula Hawkins", "Liane Moriarty"
+];
+
+// Fetch additional books for micro-genre generation
+async function fetchMicroGenreBooks() {
+  const cacheKey = 'micro_genre_books';
+  const cacheTimestampKey = 'micro_genre_books_timestamp';
+  const CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days (micro-genres don't need frequent updates)
+  
+  // Check cache first
+  try {
+    const cached = localStorage.getItem(cacheKey);
+    const timestamp = localStorage.getItem(cacheTimestampKey);
+    
+    if (cached && timestamp) {
+      const age = Date.now() - parseInt(timestamp);
+      if (age < CACHE_DURATION) {
+        console.log(`Using cached micro-genre books (${Math.round(age / 1000 / 60 / 60)} hours old)`);
+        const cachedBooks = JSON.parse(cached);
+        // Generate micro-genres with cached books
+        setTimeout(() => {
+          generateMicroGenres();
+        }, 100);
+        return;
+      }
+    }
+  } catch (err) {
+    console.error('Error reading micro-genre cache:', err);
+  }
+  
+  // Fetch in background - don't block UI
+  console.log('Fetching additional books for micro-genre generation...');
+  
+  // Shuffle queries for variety, then take a subset
+  const shuffledQueries = [...microGenreQueries].sort(() => Math.random() - 0.5);
+  const queriesToFetch = shuffledQueries.slice(0, 50); // Fetch from 50 diverse queries
+  
+  // Fetch in batches to avoid rate limiting
+  const batchSize = 5;
+  const delayBetweenBatches = 500; // 500ms delay between batches
+  const allMicroGenreBooks = [];
+  
+  for (let i = 0; i < queriesToFetch.length; i += batchSize) {
+    const batch = queriesToFetch.slice(i, i + batchSize);
+    
+    try {
+      // Fetch batch in parallel
+      const batchPromises = batch.map(query => fetchGoogleBooks(query, 10));
+      const batchResults = await Promise.all(batchPromises);
+      
+      // Flatten and add to collection
+      const flatResults = batchResults.flat();
+      allMicroGenreBooks.push(...flatResults);
+      
+      // Small delay between batches to be respectful to API
+      if (i + batchSize < queriesToFetch.length) {
+        await new Promise(resolve => setTimeout(resolve, delayBetweenBatches));
+      }
+    } catch (err) {
+      console.error(`Error fetching batch ${i / batchSize + 1}:`, err);
+      // Continue with next batch even if one fails
+    }
+  }
+  
+  // Process and cache the books
+  const processedBooks = processMicroGenreBooks(allMicroGenreBooks);
+  
+  // Cache the results
+  try {
+    localStorage.setItem(cacheKey, JSON.stringify(processedBooks));
+    localStorage.setItem(cacheTimestampKey, Date.now().toString());
+    console.log(`Cached ${processedBooks.length} micro-genre books`);
+    
+    // Generate micro-genres with the new books
+    setTimeout(() => {
+      generateMicroGenres();
+    }, 500);
+  } catch (err) {
+    console.error('Error caching micro-genre books:', err);
+  }
+}
+
+// Process books for micro-genre generation (similar to processBooksForCategory but less strict)
+function processMicroGenreBooks(rawBooks) {
+  let books = rawBooks;
+  
+  // Only keep books with valid image
+  books = books.filter(b => b.volumeInfo?.imageLinks?.thumbnail || b.volumeInfo?.imageLinks?.smallThumbnail);
+  
+  // Deduplicate by title
+  const seenTitles = new Set();
+  books = books.filter(b => {
+    if (!b.volumeInfo?.title) return false;
+    const title = b.volumeInfo.title.trim().toLowerCase();
+    if (seenTitles.has(title)) return false;
+    seenTitles.add(title);
+    return true;
+  });
+  
+  // Basic filtering - only exclude obvious trash
+  books = books.filter(b => {
+    const info = b.volumeInfo || {};
+    const title = (info.title || "").toLowerCase();
+    const blacklist = ["sparknotes", "cliffsnotes", "writer's market", "writers market"];
+    return !blacklist.some(word => title.includes(word)) && info.title && info.authors;
+  });
+  
+  // Sort by popularity
+  books.sort((a, b) => {
+    const ratingA = ((a.volumeInfo?.ratingsCount || 0) * (a.volumeInfo?.averageRating || 0));
+    const ratingB = ((b.volumeInfo?.ratingsCount || 0) * (b.volumeInfo?.averageRating || 0));
+    return ratingB - ratingA;
+  });
+  
+  // Process into our format
+  return books.map(b => {
+    const img = b.volumeInfo?.imageLinks?.thumbnail || b.volumeInfo?.imageLinks?.smallThumbnail;
+    const authors = b.volumeInfo?.authors || [];
+    const categories = b.volumeInfo?.categories || [];
+    return {
+      title: b.volumeInfo?.title,
+      img: img,
+      authors: authors,
+      author: authors.length > 0 ? authors[0] : "Unknown",
+      genre: categories.length > 0 ? categories[0] : "Unspecified",
+      categories: categories,
+      description: b.volumeInfo?.description || "No description.",
+      pageCount: b.volumeInfo?.pageCount || null,
+      id: b.id,
+      volumeInfo: b.volumeInfo,
+      isMicroGenreBook: true // Flag to distinguish from main category books
+    };
+  });
+}
+
+// ========== NETFLIX-STYLE MICRO-GENRE SYSTEM ==========
+
+// Micro-genre patterns and descriptors
+const microGenrePatterns = {
+  mood: {
+    dark: ['dark', 'gritty', 'brutal', 'violent', 'disturbing', 'chilling', 'haunting', 'sinister'],
+    light: ['light', 'feel-good', 'heartwarming', 'uplifting', 'charming', 'sweet', 'funny', 'humorous'],
+    emotional: ['emotional', 'heartbreaking', 'tear-jerker', 'touching', 'poignant', 'moving'],
+    intense: ['intense', 'gripping', 'suspenseful', 'thrilling', 'edge-of-your-seat', 'pulse-pounding']
+  },
+  setting: {
+    contemporary: ['contemporary', 'modern', 'present-day', 'current', 'today'],
+    historical: ['historical', 'medieval', 'victorian', 'ancient', 'period', 'era'],
+    fantasy: ['fantasy', 'magical', 'enchanted', 'mythical', 'epic', 'legendary'],
+    dystopian: ['dystopian', 'post-apocalyptic', 'futuristic', 'sci-fi', 'cyberpunk']
+  },
+  tone: {
+    psychological: ['psychological', 'mind-bending', 'twist', 'unreliable narrator'],
+    romantic: ['romantic', 'love story', 'romance', 'passionate', 'steamy'],
+    action: ['action', 'adventure', 'fast-paced', 'high-stakes', 'battle'],
+    mystery: ['mystery', 'whodunit', 'investigation', 'detective', 'suspense']
+  },
+  popularity: {
+    bestselling: ['bestseller', 'bestselling', '#1', 'new york times', 'popular'],
+    award: ['award-winning', 'prize-winning', 'acclaimed', 'critically acclaimed']
+  }
+};
+
+// Extract keywords from book metadata
+function extractBookKeywords(book) {
+  const keywords = {
+    categories: [],
+    description: [],
+    title: []
+  };
+  
+  // Extract from categories
+  if (book.categories && Array.isArray(book.categories)) {
+    keywords.categories = book.categories.map(cat => cat.toLowerCase());
+  }
+  
+  // Extract from description
+  if (book.description) {
+    const descLower = book.description.toLowerCase();
+    // Find mood words
+    Object.keys(microGenrePatterns.mood).forEach(mood => {
+      microGenrePatterns.mood[mood].forEach(word => {
+        if (descLower.includes(word)) {
+          keywords.description.push(mood);
+        }
+      });
+    });
+    // Find setting words
+    Object.keys(microGenrePatterns.setting).forEach(setting => {
+      microGenrePatterns.setting[setting].forEach(word => {
+        if (descLower.includes(word)) {
+          keywords.description.push(setting);
+        }
+      });
+    });
+    // Find tone words
+    Object.keys(microGenrePatterns.tone).forEach(tone => {
+      microGenrePatterns.tone[tone].forEach(word => {
+        if (descLower.includes(word)) {
+          keywords.description.push(tone);
+        }
+      });
+    });
+  }
+  
+  // Extract from title
+  if (book.title) {
+    const titleLower = book.title.toLowerCase();
+    Object.keys(microGenrePatterns.setting).forEach(setting => {
+      microGenrePatterns.setting[setting].forEach(word => {
+        if (titleLower.includes(word)) {
+          keywords.title.push(setting);
+        }
+      });
+    });
+  }
+  
+  // Check for popularity indicators
+  if (book.description) {
+    const descLower = book.description.toLowerCase();
+    Object.keys(microGenrePatterns.popularity).forEach(pop => {
+      microGenrePatterns.popularity[pop].forEach(word => {
+        if (descLower.includes(word)) {
+          keywords.description.push(pop);
+        }
+      });
+    });
+  }
+  
+  return keywords;
+}
+
+// Generate micro-genre name for a book
+function generateMicroGenreName(book, keywords, existingCategories = new Set()) {
+  const parts = [];
+  const descLower = (book.description || '').toLowerCase();
+  const titleLower = (book.title || '').toLowerCase();
+  const categoriesLower = (book.categories || []).map(c => c.toLowerCase());
+  
+  // Determine primary genre from categories
+  let primaryGenre = null;
+  if (categoriesLower.some(c => c.includes('romance'))) {
+    primaryGenre = 'Romance';
+  } else if (categoriesLower.some(c => c.includes('thriller') || c.includes('suspense'))) {
+    primaryGenre = 'Thriller';
+  } else if (categoriesLower.some(c => c.includes('fantasy'))) {
+    primaryGenre = 'Fantasy';
+  } else if (categoriesLower.some(c => c.includes('horror'))) {
+    primaryGenre = 'Horror';
+  } else if (categoriesLower.some(c => c.includes('science fiction') || c.includes('sci-fi'))) {
+    primaryGenre = 'Sci-Fi';
+  } else if (categoriesLower.some(c => c.includes('mystery'))) {
+    primaryGenre = 'Mystery';
+  } else if (categoriesLower.some(c => c.includes('fiction'))) {
+    primaryGenre = 'Fiction';
+  }
+  
+  // Add popularity descriptor
+  if (descLower.includes('bestseller') || descLower.includes('#1') || descLower.includes('new york times')) {
+    parts.push('Bestselling');
+  } else if (descLower.includes('award-winning') || descLower.includes('acclaimed')) {
+    parts.push('Award-Winning');
+  }
+  
+  // Add mood descriptor (only if it adds value)
+  if (descLower.includes('dark') || descLower.includes('gritty') || descLower.includes('brutal')) {
+    parts.push('Dark');
+  } else if (descLower.includes('heartwarming') || descLower.includes('feel-good') || descLower.includes('uplifting')) {
+    parts.push('Feel-Good');
+  } else if (descLower.includes('emotional') || descLower.includes('heartbreaking') || descLower.includes('tear-jerker')) {
+    parts.push('Emotional');
+  } else if (descLower.includes('intense') || descLower.includes('gripping') || descLower.includes('suspenseful')) {
+    parts.push('Intense');
+  }
+  
+  // Add specific tone/genre modifiers
+  if (descLower.includes('psychological') || descLower.includes('mind-bending')) {
+    parts.push('Psychological');
+  }
+  
+  // Add setting/time period
+  if (descLower.includes('contemporary') || descLower.includes('modern') || categoriesLower.some(c => c.includes('contemporary'))) {
+    parts.push('Contemporary');
+  } else if (descLower.includes('historical') || categoriesLower.some(c => c.includes('historical'))) {
+    parts.push('Historical');
+  } else if (descLower.includes('epic') || titleLower.includes('epic')) {
+    parts.push('Epic');
+  } else if (descLower.includes('dystopian') || descLower.includes('post-apocalyptic')) {
+    parts.push('Dystopian');
+  }
+  
+  // Add primary genre
+  if (primaryGenre) {
+    // Avoid duplication
+    if (!parts.some(p => p.toLowerCase().includes(primaryGenre.toLowerCase()))) {
+      parts.push(primaryGenre);
+    }
+  }
+  
+  // Fallback: create more specific names based on source category
+  if (parts.length === 0) {
+    if (book.sourceCategory) {
+      const categoryMap = {
+        'fantasy': descLower.includes('young adult') ? 'Young Adult Fantasy' : 'Epic Fantasy',
+        'romance': descLower.includes('contemporary') ? 'Contemporary Romance' : 'Romantic Fiction',
+        'mystery': 'Crime & Mystery',
+        'horror': 'Supernatural Horror',
+        'scifi': 'Space Sci-Fi',
+        'nonfiction': 'Non-Fiction Reads',
+        'suggested': 'Bestselling Fiction'
+      };
+      const fallback = categoryMap[book.sourceCategory] || 'Popular Reads';
+      // Split into parts for consistency
+      parts.push(...fallback.split(' '));
+    } else if (book.genre && book.genre !== 'Unspecified') {
+      // Make genre more specific
+      if (book.genre.toLowerCase().includes('fiction')) {
+        parts.push('Literary Fiction');
+      } else {
+        parts.push(book.genre);
+      }
+    } else {
+      parts.push('Popular Reads');
+    }
+  }
+  
+  // Create readable name
+  let genreName = parts.join(' ');
+  
+  // Make more creative and specific combinations
+  // If we have multiple descriptors, create more interesting combinations
+  if (parts.length >= 3) {
+    // Reorder for better flow: Mood + Setting + Genre
+    const moodParts = parts.filter(p => ['Dark', 'Feel-Good', 'Emotional', 'Intense', 'Bestselling', 'Award-Winning'].includes(p));
+    const settingParts = parts.filter(p => ['Contemporary', 'Historical', 'Epic', 'Dystopian'].includes(p));
+    const genreParts = parts.filter(p => !moodParts.includes(p) && !settingParts.includes(p));
+    
+    const reordered = [...moodParts, ...settingParts, ...genreParts];
+    genreName = reordered.join(' ');
+  }
+  
+  // Add creative suffixes and make more specific
+  if (genreName.includes('Thriller')) {
+    if (descLower.includes('serial killer') || descLower.includes('murder')) {
+      genreName = genreName.replace('Thriller', 'Crime Thrillers');
+    } else if (descLower.includes('spy') || descLower.includes('espionage')) {
+      genreName = genreName.replace('Thriller', 'Spy Thrillers');
+    } else {
+      genreName = genreName.replace('Thriller', 'Thrillers');
+    }
+  }
+  
+  if (genreName.includes('Romance')) {
+    if (descLower.includes('enemies to lovers') || descLower.includes('rival')) {
+      genreName = genreName.replace('Romance', 'Enemies-to-Lovers Romance');
+    } else if (descLower.includes('second chance') || descLower.includes('reunion')) {
+      genreName = genreName.replace('Romance', 'Second-Chance Romance');
+    } else if (descLower.includes('steamy') || descLower.includes('passionate') || descLower.includes('spicy')) {
+      genreName = genreName.replace('Romance', 'Steamy Romance');
+    } else if (descLower.includes('sweet') || descLower.includes('clean')) {
+      genreName = genreName.replace('Romance', 'Sweet Romance');
+    }
+  }
+  
+  if (genreName.includes('Fantasy')) {
+    if (descLower.includes('dragon') || titleLower.includes('dragon')) {
+      genreName = genreName.replace('Fantasy', 'Dragon Fantasy');
+    } else if (descLower.includes('magic') || descLower.includes('wizard') || descLower.includes('witch')) {
+      genreName = genreName.replace('Fantasy', 'Magical Fantasy');
+    } else if (descLower.includes('epic') || descLower.includes('quest')) {
+      genreName = genreName.replace('Fantasy', 'Epic Fantasy');
+    } else {
+      genreName = genreName.replace('Fantasy', 'Fantasy Adventures');
+    }
+  }
+  
+  if (genreName.includes('Mystery')) {
+    if (descLower.includes('detective') || descLower.includes('investigator')) {
+      genreName = genreName.replace('Mystery', 'Detective Mysteries');
+    } else if (descLower.includes('cozy') || descLower.includes('amateur sleuth')) {
+      genreName = genreName.replace('Mystery', 'Cozy Mysteries');
+    } else {
+      genreName = genreName.replace('Mystery', 'Mystery Novels');
+    }
+  }
+  
+  if (genreName.includes('Horror')) {
+    if (descLower.includes('supernatural') || descLower.includes('ghost') || descLower.includes('paranormal')) {
+      genreName = genreName.replace('Horror', 'Supernatural Horror');
+    } else if (descLower.includes('psychological') || descLower.includes('mind')) {
+      genreName = genreName.replace('Horror', 'Psychological Horror');
+    } else {
+      genreName = genreName.replace('Horror', 'Horror Stories');
+    }
+  }
+  
+  if (genreName.includes('Sci-Fi')) {
+    if (descLower.includes('space') || descLower.includes('alien') || descLower.includes('planet')) {
+      genreName = genreName.replace('Sci-Fi', 'Space Sci-Fi');
+    } else if (descLower.includes('dystopian') || descLower.includes('dystopia')) {
+      genreName = genreName.replace('Sci-Fi', 'Dystopian Sci-Fi');
+    } else {
+      genreName = genreName.replace('Sci-Fi', 'Sci-Fi Adventures');
+    }
+  }
+  
+  // Add creative descriptors for Fiction
+  if (genreName.includes('Fiction') && !genreName.includes('Science Fiction')) {
+    if (descLower.includes('family saga') || descLower.includes('generation')) {
+      genreName = genreName.replace('Fiction', 'Family Sagas');
+    } else if (descLower.includes('coming of age') || descLower.includes('young adult')) {
+      genreName = genreName.replace('Fiction', 'Coming-of-Age Stories');
+    } else if (descLower.includes('literary')) {
+      genreName = genreName.replace('Fiction', 'Literary Fiction');
+    }
+  }
+  
+  // For Non-Fiction, make more specific
+  if (genreName.includes('Non-Fiction') || genreName.includes('Nonfiction')) {
+    if (descLower.includes('self-help') || descLower.includes('self help') || descLower.includes('personal development')) {
+      genreName = 'Self-Help & Personal Development';
+    } else if (descLower.includes('biography') || descLower.includes('memoir') || descLower.includes('autobiography')) {
+      genreName = 'Biographies & Memoirs';
+    } else if (descLower.includes('business') || descLower.includes('entrepreneur')) {
+      genreName = 'Business & Entrepreneurship';
+    } else if (descLower.includes('history') || descLower.includes('historical')) {
+      genreName = 'Historical Non-Fiction';
+    } else {
+      genreName = 'Non-Fiction Reads';
+    }
+  }
+  
+  // Remove "Books" suffix if it makes it too generic, but keep for some cases
+  if (genreName.endsWith(' Books') && parts.length >= 2) {
+    // Keep "Books" only for very generic categories
+    if (!['Popular Books', 'Fiction Books'].includes(genreName)) {
+      genreName = genreName.replace(' Books', '');
+    }
+  }
+  
+  return genreName;
+}
+
+// Get existing category names from the page
+function getExistingCategoryNames() {
+  const existingCategories = new Set();
+  
+  // Get from sidebar buttons
+  document.querySelectorAll('.sidebar button').forEach(button => {
+    const filter = button.dataset.filter;
+    const categoryMap = {
+      'suggested': 'Suggested',
+      'fantasy': 'Fantasy',
+      'horror': 'Horror',
+      'romance': 'Romance',
+      'mystery': 'Mystery',
+      'scifi': 'Sci-Fi',
+      'nonfiction': 'Non-Fiction'
+    };
+    if (categoryMap[filter]) {
+      existingCategories.add(categoryMap[filter].toLowerCase());
+    }
+  });
+  
+  // Get from category headings
+  document.querySelectorAll('.category h2').forEach(heading => {
+    const text = heading.textContent.trim().toLowerCase();
+    // Extract first word (main category name)
+    const firstWord = text.split(' ')[0];
+    existingCategories.add(firstWord);
+    // Also check for common variations
+    if (text.includes('sci-fi') || text.includes('scifi')) {
+      existingCategories.add('sci-fi');
+      existingCategories.add('science fiction');
+    }
+    if (text.includes('non-fiction') || text.includes('nonfiction')) {
+      existingCategories.add('non-fiction');
+      existingCategories.add('nonfiction');
+    }
+  });
+  
+  return existingCategories;
+}
+
+// Check if a micro-genre name conflicts with existing categories
+function conflictsWithExisting(genreName, existingCategories) {
+  const genreLower = genreName.toLowerCase().trim();
+  
+  // Direct matches
+  if (existingCategories.has(genreLower)) {
+    return true;
+  }
+  
+  // Check against known existing category patterns
+  const existingPatterns = [
+    'suggested', 'fantasy', 'horror', 'romance', 'mystery', 
+    'sci-fi', 'scifi', 'science fiction', 'non-fiction', 'nonfiction', 'non fiction'
+  ];
+  
+  for (const pattern of existingPatterns) {
+    // If the genre name starts with or is just the pattern, it's a duplicate
+    if (genreLower === pattern || genreLower.startsWith(pattern + ' ') || genreLower === pattern + 's') {
+      return true;
+    }
+    // If it's just the pattern with common suffixes
+    if (genreLower === pattern + ' books' || 
+        genreLower === pattern + ' reads' ||
+        genreLower === pattern + ' stories' ||
+        genreLower === pattern + ' worlds' ||
+        genreLower === pattern + ' adventures' ||
+        genreLower === pattern + ' thrillers') {
+      return true;
+    }
+  }
+  
+  // Check for partial word matches that would be too similar
+  const genreWords = genreLower.split(/\s+/).filter(w => w.length > 2);
+  for (const existing of existingCategories) {
+    const existingWords = existing.split(/\s+/).filter(w => w.length > 2);
+    
+    // If it's a single-word match with a common genre word, likely duplicate
+    if (genreWords.length === 1 && existingWords.length === 1 && genreWords[0] === existingWords[0]) {
+      return true;
+    }
+    
+    // If all significant words of existing are in new genre (and new genre isn't much longer)
+    if (existingWords.length > 0 && existingWords.length <= genreWords.length) {
+      const significantMatches = existingWords.filter(word => 
+        genreWords.includes(word) || 
+        genreWords.some(gw => gw.includes(word) || word.includes(gw))
+      );
+      // If most words match and it's not significantly more specific, it's a duplicate
+      if (significantMatches.length === existingWords.length && genreWords.length - existingWords.length <= 2) {
+        return true;
+      }
+    }
+  }
+  
+  return false;
+}
+
+// Generate micro-genres from all loaded books
+function generateMicroGenres() {
+  // Collect all books from all categories
+  const allBooks = [];
+  Object.keys(bookData).forEach(category => {
+    if (category !== 'featured' && Array.isArray(bookData[category])) {
+      bookData[category].forEach(book => {
+        // Add source category for reference
+        book.sourceCategory = category;
+        allBooks.push(book);
+      });
+    }
+  });
+  
+  // Add micro-genre books if available
+  try {
+    const microGenreBooks = JSON.parse(localStorage.getItem('micro_genre_books') || '[]');
+    microGenreBooks.forEach(book => {
+      // Only add if not already in allBooks (avoid duplicates)
+      const isDuplicate = allBooks.some(b => 
+        (b.id && book.id && b.id === book.id) || 
+        (b.title && book.title && b.title.toLowerCase() === book.title.toLowerCase())
+      );
+      if (!isDuplicate) {
+        book.sourceCategory = 'micro-genre';
+        allBooks.push(book);
+      }
+    });
+    console.log(`Added ${microGenreBooks.length} micro-genre books to pool`);
+  } catch (err) {
+    console.error('Error loading micro-genre books:', err);
+  }
+  
+  if (allBooks.length === 0) {
+    console.log('No books available for micro-genre generation');
+    return;
+  }
+  
+  // Get existing category names to avoid duplicates
+  const existingCategories = getExistingCategoryNames();
+  
+  // Group books by micro-genre
+  const microGenres = {};
+  
+  allBooks.forEach(book => {
+    const keywords = extractBookKeywords(book);
+    const genreName = generateMicroGenreName(book, keywords, existingCategories);
+    
+    // Skip if it conflicts with existing categories
+    if (conflictsWithExisting(genreName, existingCategories)) {
+      return;
+    }
+    
+    if (!microGenres[genreName]) {
+      microGenres[genreName] = [];
+    }
+    
+    // Add book with its micro-genre info
+    book.microGenre = genreName;
+    book.microGenreKeywords = keywords;
+    microGenres[genreName].push(book);
+  });
+  
+  // Filter out micro-genres with too few books (need at least 4 to be displayed)
+  const validMicroGenres = {};
+  Object.keys(microGenres).forEach(genreName => {
+    if (microGenres[genreName].length >= 4) {
+      validMicroGenres[genreName] = microGenres[genreName];
+    }
+  });
+  
+  // Convert to array
+  const allValidGenres = Object.entries(validMicroGenres);
+  
+  if (allValidGenres.length === 0) {
+    console.log('No valid micro-genres generated');
+    return;
+  }
+  
+  console.log(`Total valid micro-genres available: ${allValidGenres.length}`, allValidGenres.map(([name]) => name));
+  
+  // Enhanced shuffle with better randomness
+  function shuffleArray(array) {
+    const shuffled = [...array];
+    // Use Date.now() as additional entropy
+    const entropy = Date.now() + Math.random() * 1000;
+    
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      // Combine multiple random sources for better distribution
+      const random1 = Math.random();
+      const random2 = (entropy + i) % 1;
+      const combinedRandom = (random1 + random2) / 2;
+      const j = Math.floor(combinedRandom * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  }
+  
+  // Shuffle all valid genres multiple times for better randomization
+  let shuffledGenres = allValidGenres;
+  for (let i = 0; i < 5; i++) {
+    shuffledGenres = shuffleArray(shuffledGenres);
+  }
+  
+  // Determine how many to show (random between 6-10, or all if fewer)
+  const maxToShow = Math.min(10, shuffledGenres.length);
+  const minToShow = Math.min(6, shuffledGenres.length);
+  const numToShow = minToShow + Math.floor(Math.random() * (maxToShow - minToShow + 1));
+  
+  // Use a more diverse selection strategy
+  // Instead of taking consecutive items, sample from different parts
+  const selectedGenres = [];
+  const usedIndices = new Set();
+  
+  // First, randomly pick indices to ensure diversity
+  while (selectedGenres.length < numToShow && usedIndices.size < shuffledGenres.length) {
+    let attempts = 0;
+    let index;
+    
+    // Try to find an unused index
+    do {
+      index = Math.floor(Math.random() * shuffledGenres.length);
+      attempts++;
+    } while (usedIndices.has(index) && attempts < 100);
+    
+    if (!usedIndices.has(index)) {
+      usedIndices.add(index);
+      selectedGenres.push(shuffledGenres[index]);
+    } else {
+      // If we can't find unused, break to avoid infinite loop
+      break;
+    }
+  }
+  
+  // Final shuffle of selected genres for presentation order
+  const finalSelection = shuffleArray(selectedGenres);
+  
+  // Render micro-genre categories
+  renderMicroGenres(finalSelection);
+  
+  console.log(`Selected ${finalSelection.length} random micro-genres from ${allValidGenres.length} available (${allBooks.length} total books analyzed):`, finalSelection.map(([name]) => name));
+}
+
+// Render micro-genre categories on the page
+function renderMicroGenres(microGenres) {
+  const main = document.querySelector('main');
+  if (!main) return;
+  
+  // Create a container for micro-genres (insert after existing categories)
+  let microGenresContainer = document.getElementById('micro-genres-container');
+  if (!microGenresContainer) {
+    microGenresContainer = document.createElement('div');
+    microGenresContainer.id = 'micro-genres-container';
+    main.appendChild(microGenresContainer);
+  }
+  
+  microGenresContainer.innerHTML = '';
+  
+  microGenres.forEach(([genreName, books]) => {
+    // Create category section
+    const categorySection = document.createElement('section');
+    categorySection.className = 'category micro-genre-category';
+    categorySection.dataset.microGenre = genreName.toLowerCase().replace(/\s+/g, '-');
+    
+    // Create heading
+    const heading = document.createElement('h2');
+    const words = genreName.split(' ');
+    if (words.length > 1) {
+      heading.innerHTML = `<span>${words[0]}</span> <span>${words.slice(1).join(' ')}</span>`;
+    } else {
+      heading.innerHTML = `<span>${genreName}</span>`;
+    }
+    categorySection.appendChild(heading);
+    
+    // Create row container
+    const rowContainer = document.createElement('div');
+    rowContainer.className = 'row-container';
+    
+    const scrollLeft = document.createElement('button');
+    scrollLeft.className = 'scroll-left';
+    scrollLeft.innerHTML = '<i class="fas fa-chevron-left"></i>';
+    
+    const bookRow = document.createElement('div');
+    bookRow.className = 'book-row';
+    bookRow.id = `micro-genre-${genreName.toLowerCase().replace(/\s+/g, '-')}`;
+    
+    const scrollRight = document.createElement('button');
+    scrollRight.className = 'scroll-right';
+    scrollRight.innerHTML = '<i class="fas fa-chevron-right"></i>';
+    
+    rowContainer.appendChild(scrollLeft);
+    rowContainer.appendChild(bookRow);
+    rowContainer.appendChild(scrollRight);
+    
+    categorySection.appendChild(rowContainer);
+    microGenresContainer.appendChild(categorySection);
+    
+    // Render books in this micro-genre
+    renderMicroGenreBooks(bookRow.id, books);
+  });
+  
+  // Re-initialize infinite scroll for new categories
+  setTimeout(() => {
+    initializeInfiniteScroll();
+  }, 100);
+}
+
+// Render books for a specific micro-genre
+function renderMicroGenreBooks(containerId, books) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  
+  container.innerHTML = '';
+  
+  const bookElements = [];
+  
+  books.forEach(book => {
+    const div = document.createElement('div');
+    div.className = 'book';
+    div.innerHTML = `
+      <img src="${book.img}" alt="${book.title}">
+      <p>${book.title}</p>
+    `;
+    
+    div.addEventListener('click', () => {
+      localStorage.setItem('selectedBook', JSON.stringify(book));
+      window.location.href = 'book.html';
+    });
+    
+    container.appendChild(div);
+    bookElements.push({ element: div, book });
+  });
+  
+  // Duplicate for infinite scroll
+  bookElements.forEach(({ element, book }) => {
+    const clone = element.cloneNode(true);
+    clone.addEventListener('click', () => {
+      localStorage.setItem('selectedBook', JSON.stringify(book));
+      window.location.href = 'book.html';
+    });
+    container.appendChild(clone);
+  });
+}
 
 // ========== LIVE SEARCH FUNCTIONALITY ==========
 
