@@ -124,12 +124,32 @@
   position: relative;
 }
 
+/* Hide category carousels on shelf page */
+.shelf-display .category,
+.shelf-display .row-container,
+.shelf-display .book-row,
+.shelf-container .category,
+.shelf-container .row-container,
+.shelf-container .book-row,
+.shelf-container main .category,
+.shelf-container main .row-container,
+.shelf-container main .book-row {
+  display: none !important;
+}
+
+/* Also hide any main element content that might be from script.js on shelf page */
+.shelf-container > main:not(.shelf-display) {
+  display: none !important;
+}
+
 .shelf-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 40px;
   padding-left: 20px; /* Move title to the right, away from sidebar */
+  position: relative;
+  z-index: 10;
 }
 
 .shelf-header h2 {
@@ -146,9 +166,20 @@
   color: #fff;
   font-size: 1.5rem;
   cursor: pointer;
-  padding: 10px;
+  padding: 10px 15px;
   border-radius: 5px;
   transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  z-index: 10;
+  position: relative;
+}
+
+.shelf-options-btn i {
+  display: block;
 }
 
 .shelf-options-btn:hover {

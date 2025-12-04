@@ -71,6 +71,56 @@ async function fetchGoogleBooks(query, maxResults = 15) {
   }
 };
 
+// Helper function to get the best available image size
+// Priority: extraLarge > large > medium > small > thumbnail > smallThumbnail
+function getBestImage(imageLinks, preferHighRes = false) {
+  if (!imageLinks) return null;
+  
+  let imageUrl = null;
+  
+  if (preferHighRes) {
+    // For hero section, prefer the largest available
+    imageUrl = imageLinks.extraLarge || 
+               imageLinks.large || 
+               imageLinks.medium || 
+               imageLinks.small || 
+               imageLinks.thumbnail || 
+               imageLinks.smallThumbnail || 
+               null;
+  } else {
+    // For regular book cards, use medium or larger
+    imageUrl = imageLinks.medium || 
+               imageLinks.large || 
+               imageLinks.extraLarge || 
+               imageLinks.small || 
+               imageLinks.thumbnail || 
+               imageLinks.smallThumbnail || 
+               null;
+  }
+  
+  // Enhance image URL for higher resolution if possible
+  if (imageUrl) {
+    // Remove zoom parameter and size restrictions to get full resolution
+    // Google Books API URLs can be enhanced by removing zoom=1 or changing it
+    imageUrl = imageUrl.replace(/&zoom=\d+/, ''); // Remove zoom parameter
+    imageUrl = imageUrl.replace(/=zoom\d+/, ''); // Remove alternative zoom format
+    
+    // For thumbnail/smallThumbnail, try to get larger version
+    // Replace http:// with https:// for better security and sometimes better quality
+    imageUrl = imageUrl.replace(/^http:\/\//, 'https://');
+    
+    // If it's a thumbnail URL, try to get the larger version
+    // Google Books thumbnail URLs can be modified to get higher res
+    if (imageUrl.includes('books.google.com') && imageUrl.includes('thumbnail')) {
+      // Try to get medium or large version by modifying the URL
+      // This is a workaround since not all books have all sizes available
+      imageUrl = imageUrl.replace(/zoom=\d+/, 'zoom=0'); // zoom=0 often gives higher res
+    }
+  }
+  
+  return imageUrl;
+}
+
 const bookData = {
   suggested: [],
   featured: [],
@@ -136,7 +186,7 @@ function processBooksForCategory(rawBooks, category) {
   books = books.slice(0, 20);
 
   return books.map(b => {
-    const img = b.volumeInfo.imageLinks?.thumbnail || b.volumeInfo.imageLinks?.smallThumbnail;
+    const img = getBestImage(b.volumeInfo.imageLinks, false);
     const authors = b.volumeInfo.authors || [];
     const categories = b.volumeInfo.categories || [];
     return {
@@ -191,8 +241,8 @@ async function loadCategory(category, queryList) {
     hideLoadingIndicator(category);
     
     // Update featured if this is the suggested category
-    if (category === 'suggested' && processedBooks.length >= 2) {
-      bookData.featured = processedBooks.slice(0, 2);
+    if (category === 'suggested' && processedBooks.length >= 1) {
+      bookData.featured = processedBooks.slice(0, 1);
       renderFeaturedBooks();
     }
   } catch (err) {
@@ -260,8 +310,8 @@ async function loadAllCategories() {
   await Promise.all(categoryPromises);
   
   // Ensure featured is set if suggested loaded
-  if (bookData.suggested.length >= 2 && bookData.featured.length === 0) {
-    bookData.featured = bookData.suggested.slice(0, 2);
+  if (bookData.suggested.length >= 1 && bookData.featured.length === 0) {
+    bookData.featured = bookData.suggested.slice(0, 1);
     renderFeaturedBooks();
   }
   
@@ -337,16 +387,18 @@ function renderAllBooks() {
 
 // Render featured books in hero section
 function renderFeaturedBooks() {
-  if (bookData.featured && bookData.featured.length >= 2) {
+  if (bookData.featured && bookData.featured.length >= 1) {
     const featuredBook1 = document.getElementById('featured-book-1');
-    const featuredBook2 = document.getElementById('featured-book-2');
     
     if (featuredBook1) {
       const book1 = bookData.featured[0];
       const img1 = featuredBook1.querySelector('.featured-book-image img');
       const title1 = featuredBook1.querySelector('.featured-book-title');
       
-      if (img1) img1.src = book1.img || '';
+      // Get highest resolution image for hero section
+      const highResImg = getBestImage(book1.volumeInfo?.imageLinks, true) || book1.img || '';
+      
+      if (img1) img1.src = highResImg;
       if (img1) img1.alt = book1.title || '';
       if (title1) title1.textContent = book1.title || '';
       
@@ -360,30 +412,16 @@ function renderFeaturedBooks() {
         window.location.href = 'book.html';
       });
     }
-    
-    if (featuredBook2) {
-      const book2 = bookData.featured[1];
-      const img2 = featuredBook2.querySelector('.featured-book-image img');
-      const title2 = featuredBook2.querySelector('.featured-book-title');
-      
-      if (img2) img2.src = book2.img || '';
-      if (img2) img2.alt = book2.title || '';
-      if (title2) title2.textContent = book2.title || '';
-      
-      // Remove old event listeners by cloning and replacing
-      const newFeatured2 = featuredBook2.cloneNode(true);
-      featuredBook2.parentNode.replaceChild(newFeatured2, featuredBook2);
-      
-      // Add click event to entire featured book card
-      newFeatured2.addEventListener('click', () => {
-        localStorage.setItem('selectedBook', JSON.stringify(book2));
-        window.location.href = 'book.html';
-      });
-    }
   }
 }
 
-loadAllCategories();
+// Only load categories if we're on the home page (not shelf page)
+if (window.location.pathname.includes('home.html') || 
+    (!window.location.pathname.includes('shelf.html') && 
+     !window.location.pathname.includes('shelf-settings.html') &&
+     !window.location.pathname.includes('book.html'))) {
+  loadAllCategories();
+}
 
 // Infinite loop scroll functionality
 function initializeInfiniteScroll() {
@@ -555,14 +593,9 @@ async function refreshHeroBooks(genre) {
   try {
     // Show loading state in hero
     const featuredBook1 = document.getElementById('featured-book-1');
-    const featuredBook2 = document.getElementById('featured-book-2');
     if (featuredBook1) {
       const title1 = featuredBook1.querySelector('.featured-book-title');
       if (title1) title1.textContent = 'Loading...';
-    }
-    if (featuredBook2) {
-      const title2 = featuredBook2.querySelector('.featured-book-title');
-      if (title2) title2.textContent = 'Loading...';
     }
     
     // Fetch fresh books for hero
@@ -573,20 +606,16 @@ async function refreshHeroBooks(genre) {
     // Process books
     const processedBooks = processBooksForCategory(allBooks, genre);
     
-    if (processedBooks.length >= 2) {
-      // Update featured books
-      bookData.featured = processedBooks.slice(0, 2);
-      renderFeaturedBooks();
-    } else if (processedBooks.length === 1) {
-      // If only one book, use it and a book from the category
-      bookData.featured = [processedBooks[0], bookData[genre]?.[0] || processedBooks[0]];
+    if (processedBooks.length >= 1) {
+      // Update featured book
+      bookData.featured = processedBooks.slice(0, 1);
       renderFeaturedBooks();
     }
   } catch (err) {
     console.error('Error refreshing hero books:', err);
     // Fallback to category books
-    if (bookData[genre] && bookData[genre].length >= 2) {
-      bookData.featured = bookData[genre].slice(0, 2);
+    if (bookData[genre] && bookData[genre].length >= 1) {
+      bookData.featured = bookData[genre].slice(0, 1);
       renderFeaturedBooks();
     }
   }
@@ -688,9 +717,9 @@ function resetToDefaultView() {
     microCat.style.display = 'block';
   });
   
-  // Restore original featured books
-  if (bookData.suggested && bookData.suggested.length >= 2) {
-    bookData.featured = bookData.suggested.slice(0, 2);
+  // Restore original featured book
+  if (bookData.suggested && bookData.suggested.length >= 1) {
+    bookData.featured = bookData.suggested.slice(0, 1);
     renderFeaturedBooks();
   }
 }
@@ -834,7 +863,7 @@ async function fetchMicroGenreBooks() {
 function processMicroGenreBooks(rawBooks) {
   let books = rawBooks;
   
-  // Only keep books with valid image
+  // Only keep books with a valid image
   books = books.filter(b => b.volumeInfo?.imageLinks?.thumbnail || b.volumeInfo?.imageLinks?.smallThumbnail);
   
   // Deduplicate by title
@@ -864,7 +893,7 @@ function processMicroGenreBooks(rawBooks) {
   
   // Process into our format
   return books.map(b => {
-    const img = b.volumeInfo?.imageLinks?.thumbnail || b.volumeInfo?.imageLinks?.smallThumbnail;
+    const img = getBestImage(b.volumeInfo?.imageLinks, false);
     const authors = b.volumeInfo?.authors || [];
     const categories = b.volumeInfo?.categories || [];
     return {
@@ -1572,7 +1601,7 @@ async function searchBooksFromAPI(query) {
   try {
     const results = await fetchGoogleBooks(query, 20);
     return results.map(b => {
-      const img = b.volumeInfo.imageLinks?.thumbnail || b.volumeInfo.imageLinks?.smallThumbnail;
+      const img = getBestImage(b.volumeInfo.imageLinks, false);
       const authors = b.volumeInfo.authors || [];
       const categories = b.volumeInfo.categories || [];
       return {
