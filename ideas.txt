@@ -1,12 +1,12 @@
-overall book review
-book notes (sticky notes) we ask the user for notes about an individual page
-5 star rating system, with half star (3.5 stars)
-themes (change font or just overall theme)
-allow users to potentially add a day finished for each book added to their shelves
-let users set a book goal, like i want to read 12 books this year, and there can be a progress bar for that as well
-when pressing on side nav bar genres, i think it should switch from horizontal scroll to a page that will have rows of books
-search should present movies in a list with a nice size pic of the cover, short description, and maybe page count or rating?
-look into letting users change their bookshelves from being front covers to the spine, maybe they can choose individual books to be front facing or spine facing
+
+-themes (change font or just overall theme)
+-let users set a book goal, like i want to read 12 books this year, and there can be a progress bar for that as well
+-when pressing on side nav bar genres, i think it should switch from horizontal scroll to a page that will have rows of books
+-look into letting users change their bookshelves from being front covers to the spine, maybe they can choose individual books to be front facing or spine facing
+-Resize hero books
+-More/personalized genres
+-Personalized recommendations
+
 
 
 MUST DO:
@@ -15,3 +15,15 @@ Cley:
 3 default bookshelves (Want to read, read, reading) these shelves will be automatically applied
 add progress bar based on user input of current page they are on (google books api has a pagecount attribute)
 user account page can have stats like how many books they have total or in each shelf, maybe how many pages theyve read this week or total
+
+Jeff:
+Done:
+-overall book review (tied to user) X
+-book notes (sticky notes) we ask the user for notes about an individual page X 
+-5 star rating system, with half star (3.5 stars) (tied to user) X
+-search should present movies in a list with a nice size pic of the cover, short description, and maybe page count or rating?
+-Fix Author & Genre getting pulled in as unknown/unspecified X
+-allow users to potentially add a day finished for each book added to their shelves X
+
+Todo Next:
+-add color-coding option to notes (make them look like sticky notes)

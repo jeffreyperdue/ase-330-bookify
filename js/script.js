@@ -346,12 +346,16 @@ function renderFeaturedBooks() {
       const img1 = featuredBook1.querySelector('.featured-book-image img');
       const title1 = featuredBook1.querySelector('.featured-book-title');
       
-      if (img1) img1.src = book1.img;
-      if (img1) img1.alt = book1.title;
-      if (title1) title1.textContent = book1.title;
+      if (img1) img1.src = book1.img || '';
+      if (img1) img1.alt = book1.title || '';
+      if (title1) title1.textContent = book1.title || '';
+      
+      // Remove old event listeners by cloning and replacing
+      const newFeatured1 = featuredBook1.cloneNode(true);
+      featuredBook1.parentNode.replaceChild(newFeatured1, featuredBook1);
       
       // Add click event to entire featured book card
-      featuredBook1.addEventListener('click', () => {
+      newFeatured1.addEventListener('click', () => {
         localStorage.setItem('selectedBook', JSON.stringify(book1));
         window.location.href = 'book.html';
       });
@@ -362,12 +366,16 @@ function renderFeaturedBooks() {
       const img2 = featuredBook2.querySelector('.featured-book-image img');
       const title2 = featuredBook2.querySelector('.featured-book-title');
       
-      if (img2) img2.src = book2.img;
-      if (img2) img2.alt = book2.title;
-      if (title2) title2.textContent = book2.title;
+      if (img2) img2.src = book2.img || '';
+      if (img2) img2.alt = book2.title || '';
+      if (title2) title2.textContent = book2.title || '';
+      
+      // Remove old event listeners by cloning and replacing
+      const newFeatured2 = featuredBook2.cloneNode(true);
+      featuredBook2.parentNode.replaceChild(newFeatured2, featuredBook2);
       
       // Add click event to entire featured book card
-      featuredBook2.addEventListener('click', () => {
+      newFeatured2.addEventListener('click', () => {
         localStorage.setItem('selectedBook', JSON.stringify(book2));
         window.location.href = 'book.html';
       });
@@ -488,45 +496,226 @@ function initializeInfiniteScroll() {
   });
 }
 
-// Genre filtering functionality
+// Genre filtering functionality with dynamic content refresh
 const sidebarButtons = document.querySelectorAll('.sidebar button');
 const categories = document.querySelectorAll('.category');
 
-let activeFilters = new Set(); // store selected filters
+let currentGenreFilter = null; // Track current active genre
+
+// Genre-specific queries for refreshing content
+const genreRefreshQueries = {
+  suggested: [
+    "bestseller fiction 2024",
+    "popular novel 2023",
+    "award winning fiction",
+    "trending books"
+  ],
+  fantasy: [
+    "epic fantasy bestseller",
+    "fantasy adventure",
+    "magical fantasy",
+    "young adult fantasy"
+  ],
+  horror: [
+    "horror bestseller",
+    "supernatural horror",
+    "psychological horror",
+    "gothic horror"
+  ],
+  romance: [
+    "contemporary romance bestseller",
+    "romantic fiction",
+    "romance novel",
+    "love story"
+  ],
+  mystery: [
+    "mystery thriller bestseller",
+    "detective novel",
+    "crime fiction",
+    "psychological thriller"
+  ],
+  scifi: [
+    "science fiction bestseller",
+    "sci-fi adventure",
+    "dystopian fiction",
+    "space opera"
+  ],
+  nonfiction: [
+    "nonfiction bestseller",
+    "memoir",
+    "biography",
+    "self help"
+  ]
+};
+
+// Refresh hero section with genre-specific books
+async function refreshHeroBooks(genre) {
+  const queries = genreRefreshQueries[genre] || genreRefreshQueries.suggested;
+  
+  try {
+    // Show loading state in hero
+    const featuredBook1 = document.getElementById('featured-book-1');
+    const featuredBook2 = document.getElementById('featured-book-2');
+    if (featuredBook1) {
+      const title1 = featuredBook1.querySelector('.featured-book-title');
+      if (title1) title1.textContent = 'Loading...';
+    }
+    if (featuredBook2) {
+      const title2 = featuredBook2.querySelector('.featured-book-title');
+      if (title2) title2.textContent = 'Loading...';
+    }
+    
+    // Fetch fresh books for hero
+    const bookPromises = queries.slice(0, 2).map(query => fetchGoogleBooks(query, 5));
+    const bookResults = await Promise.all(bookPromises);
+    const allBooks = bookResults.flat();
+    
+    // Process books
+    const processedBooks = processBooksForCategory(allBooks, genre);
+    
+    if (processedBooks.length >= 2) {
+      // Update featured books
+      bookData.featured = processedBooks.slice(0, 2);
+      renderFeaturedBooks();
+    } else if (processedBooks.length === 1) {
+      // If only one book, use it and a book from the category
+      bookData.featured = [processedBooks[0], bookData[genre]?.[0] || processedBooks[0]];
+      renderFeaturedBooks();
+    }
+  } catch (err) {
+    console.error('Error refreshing hero books:', err);
+    // Fallback to category books
+    if (bookData[genre] && bookData[genre].length >= 2) {
+      bookData.featured = bookData[genre].slice(0, 2);
+      renderFeaturedBooks();
+    }
+  }
+}
+
+// Refresh category carousels with genre-specific books
+async function refreshCategoryCarousels(genre) {
+  // If "suggested" is selected, show all categories (default view)
+  if (genre === 'suggested') {
+    categories.forEach(cat => {
+      cat.style.display = 'block';
+    });
+    
+    // Show all micro-genres
+    const microGenreCategories = document.querySelectorAll('.micro-genre-category');
+    microGenreCategories.forEach(microCat => {
+      microCat.style.display = 'block';
+    });
+    return;
+  }
+  
+  // Hide all categories first
+  categories.forEach(cat => {
+    cat.style.display = 'none';
+  });
+  
+  // Show and refresh the selected genre category
+  const targetCategory = document.querySelector(`#${genre}`);
+  if (targetCategory) {
+    const categorySection = targetCategory.closest('.category');
+    if (categorySection) {
+      categorySection.style.display = 'block';
+      
+      // Show loading
+      showLoadingIndicator(genre);
+      
+      // Fetch fresh books (use cached if available, otherwise fetch)
+      const cached = getCachedData(genre);
+      if (cached && cached.length > 0) {
+        bookData[genre] = cached;
+        renderCategory(genre);
+        hideLoadingIndicator(genre);
+      } else {
+        // Fetch fresh books
+        const queries = genreRefreshQueries[genre] || [];
+        try {
+          const bookPromises = queries.map(query => fetchGoogleBooks(query, 10));
+          const bookResults = await Promise.all(bookPromises);
+          const allBooks = bookResults.flat();
+          const processedBooks = processBooksForCategory(allBooks, genre);
+          
+          // Update bookData
+          bookData[genre] = processedBooks;
+          
+          // Cache the results
+          setCachedData(genre, processedBooks);
+          
+          // Render the category
+          renderCategory(genre);
+          hideLoadingIndicator(genre);
+        } catch (err) {
+          console.error(`Error refreshing ${genre} category:`, err);
+          hideLoadingIndicator(genre);
+        }
+      }
+    }
+  }
+  
+  // Show related micro-genres that match the selected genre
+  const microGenreCategories = document.querySelectorAll('.micro-genre-category');
+  microGenreCategories.forEach(microCat => {
+    const genreName = (microCat.dataset.microGenre || '').toLowerCase();
+    const genreLower = genre.toLowerCase();
+    
+    // Show micro-genres that are related to the selected genre
+    const isRelated = 
+      genreName.includes(genreLower) || 
+      (genre === 'fantasy' && (genreName.includes('fantasy') || genreName.includes('epic') || genreName.includes('magical') || genreName.includes('dragon'))) ||
+      (genre === 'romance' && (genreName.includes('romance') || genreName.includes('romantic') || genreName.includes('love'))) ||
+      (genre === 'horror' && (genreName.includes('horror') || genreName.includes('supernatural') || genreName.includes('dark'))) ||
+      (genre === 'mystery' && (genreName.includes('mystery') || genreName.includes('thriller') || genreName.includes('crime') || genreName.includes('detective'))) ||
+      (genre === 'scifi' && (genreName.includes('sci-fi') || genreName.includes('space') || genreName.includes('dystopian') || genreName.includes('science'))) ||
+      (genre === 'nonfiction' && (genreName.includes('non-fiction') || genreName.includes('nonfiction') || genreName.includes('memoir') || genreName.includes('biography') || genreName.includes('self-help')));
+    
+    microCat.style.display = isRelated ? 'block' : 'none';
+  });
+}
+
+// Reset to show all categories (default view)
+function resetToDefaultView() {
+  // Show all main categories
+  categories.forEach(cat => {
+    cat.style.display = 'block';
+  });
+  
+  // Show all micro-genres
+  const microGenreCategories = document.querySelectorAll('.micro-genre-category');
+  microGenreCategories.forEach(microCat => {
+    microCat.style.display = 'block';
+  });
+  
+  // Restore original featured books
+  if (bookData.suggested && bookData.suggested.length >= 2) {
+    bookData.featured = bookData.suggested.slice(0, 2);
+    renderFeaturedBooks();
+  }
+}
 
 sidebarButtons.forEach(button => {
-  button.addEventListener('click', () => {
+  button.addEventListener('click', async () => {
     const filter = button.dataset.filter;
-
+    
     // Toggle filter on/off
-    if (activeFilters.has(filter)) {
-      activeFilters.delete(filter);
+    if (currentGenreFilter === filter) {
+      // Deselect - return to default view
+      currentGenreFilter = null;
       button.classList.remove('active');
+      resetToDefaultView();
     } else {
-      // Clear all other active filters for single selection
+      // Select new genre
       sidebarButtons.forEach(btn => btn.classList.remove('active'));
-      activeFilters.clear();
-      activeFilters.add(filter);
       button.classList.add('active');
-    }
-
-    // Update visible categories
-    if (activeFilters.size === 0) {
-      categories.forEach(cat => cat.style.display = 'block'); // show all if no filter
-    } else {
-      categories.forEach(cat => {
-        // Get the book-row element and its ID
-        const bookRow = cat.querySelector('.book-row');
-        if (bookRow) {
-          const categoryId = bookRow.id;
-          // Match filter with category ID (handle scifi -> scifi mapping)
-          if (activeFilters.has(categoryId)) {
-            cat.style.display = 'block';
-          } else {
-            cat.style.display = 'none';
-          }
-        }
-      });
+      currentGenreFilter = filter;
+      
+      // Refresh hero books
+      await refreshHeroBooks(filter);
+      
+      // Refresh category carousels
+      await refreshCategoryCarousels(filter);
     }
   });
 });
