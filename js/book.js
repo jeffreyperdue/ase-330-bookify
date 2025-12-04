@@ -1,3 +1,24 @@
+// Scroll to top when page loads
+window.addEventListener('load', () => {
+  window.scrollTo(0, 0);
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+});
+
+// Also scroll to top immediately if DOM is already ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  });
+} else {
+  // DOM is already loaded
+  window.scrollTo(0, 0);
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+}
+
 // Get selected book from localStorage
 let book = JSON.parse(localStorage.getItem('selectedBook'));
 
@@ -44,6 +65,11 @@ if (book) {
 }
 
 function displayBook() {
+  // Ensure page is scrolled to top when displaying book
+  window.scrollTo(0, 0);
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+  
   document.getElementById('bookTitle').textContent = book.title;
   document.getElementById('bookImage').src = book.img || book.image || '';
   document.getElementById('bookAuthor').textContent = `Author: ${book.author || 'Unknown'}`;
