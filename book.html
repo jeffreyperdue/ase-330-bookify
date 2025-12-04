@@ -36,19 +36,111 @@
 
   <!-- 🔺 Book Details Section -->
   <main class="book-detail-container">
-    <div class="book-cover">
-      <img id="bookImage" src="" alt="Book Cover" />
+    <!-- Left Column: Book Cover and Basic Info -->
+    <div class="book-left-column">
+      <div class="book-cover">
+        <img id="bookImage" src="" alt="Book Cover" />
+      </div>
+      <button class="add-shelf-btn">+ Add to MyShelf</button>
+      <div id="book-shelves-display" class="book-shelves-display" style="display: none;"></div>
     </div>
 
-    <div class="book-info">
-      <h1 id="bookTitle">Book Title</h1>
-      <p id="bookAuthor"><strong>Author:</strong> Unknown</p>
-      <p id="bookGenre"><strong>Genre:</strong> N/A</p>
-      <p id="bookDescription">
-        A captivating story that keeps you turning the pages. This placeholder text will be replaced
-        with the book’s actual details loaded from localStorage.
-      </p>
-      <button class="add-shelf-btn">+ Add to MyShelf</button>
+    <!-- Right Column: Book Info and User Interactions -->
+    <div class="book-right-column">
+      <!-- Book Basic Info -->
+      <div class="book-basic-info">
+        <h1 id="bookTitle">Book Title</h1>
+        <p id="bookAuthor"><strong>Author:</strong> Unknown</p>
+        <p id="bookGenre"><strong>Genre:</strong> N/A</p>
+        <p id="bookDescription">
+          A captivating story that keeps you turning the pages. This placeholder text will be replaced
+          with the book's actual details loaded from localStorage.
+        </p>
+      </div>
+
+      <!-- Tabs for User Content -->
+      <div class="book-tabs">
+        <button class="tab-btn active" data-tab="rating">Rating & Review</button>
+        <button class="tab-btn" data-tab="notes">Page Notes</button>
+        <button class="tab-btn" data-tab="status">Reading Status</button>
+      </div>
+
+      <!-- Tab Content -->
+      <div class="tab-content">
+        <!-- Rating & Review Tab -->
+        <div class="tab-panel active" id="rating-tab">
+          <!-- Rating Section -->
+          <div class="book-rating-section">
+            <h3>Your Rating</h3>
+            <div class="star-rating-container">
+              <div class="star-rating" id="starRating">
+                <span class="star" data-star="1" data-half="0.5" data-full="1">☆</span>
+                <span class="star" data-star="2" data-half="1.5" data-full="2">☆</span>
+                <span class="star" data-star="3" data-half="2.5" data-full="3">☆</span>
+                <span class="star" data-star="4" data-half="3.5" data-full="4">☆</span>
+                <span class="star" data-star="5" data-half="4.5" data-full="5">☆</span>
+              </div>
+              <span class="rating-value" id="ratingValue">Not rated</span>
+            </div>
+          </div>
+
+          <!-- Review Section -->
+          <div class="book-review-section">
+            <div class="review-header">
+              <h3>Your Review</h3>
+              <button class="edit-review-btn" id="editReviewBtn" style="display: none;">
+                <i class="fas fa-edit"></i> Edit
+              </button>
+            </div>
+            <div id="reviewDisplay" class="review-display" style="display: none;">
+              <p class="review-text" id="reviewText"></p>
+            </div>
+            <div id="reviewEdit" class="review-edit">
+              <textarea id="bookReview" placeholder="Write your review here..." rows="6"></textarea>
+              <div class="review-actions">
+                <button class="save-review-btn" id="saveReviewBtn">Save Review</button>
+                <button class="cancel-review-btn" id="cancelReviewBtn" style="display: none;">Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Page Notes Tab -->
+        <div class="tab-panel" id="notes-tab">
+          <div class="book-notes-section">
+            <h3>Page Notes</h3>
+            <div class="add-note-controls">
+              <div class="note-input-row">
+                <input type="number" id="notePageNumber" placeholder="Page number" min="1">
+                <button class="add-note-btn" id="addNoteBtn">Add Note</button>
+              </div>
+              <textarea id="noteText" placeholder="Your note..." rows="3"></textarea>
+            </div>
+            <div id="notesList" class="notes-list"></div>
+          </div>
+        </div>
+
+        <!-- Reading Status Tab -->
+        <div class="tab-panel" id="status-tab">
+          <div class="book-finished-section">
+            <h3>Reading Status</h3>
+            <div class="finished-date-controls">
+              <label class="finished-checkbox-label">
+                <input type="checkbox" id="finishedCheckbox"> 
+                <span>I finished this book</span>
+              </label>
+              <div id="finishedDateContainer" class="finished-date-container" style="display: none;">
+                <label for="finishedDate">Finished on:</label>
+                <div class="date-input-group">
+                  <input type="date" id="finishedDate">
+                  <button class="save-finished-btn" id="saveFinishedBtn">Save</button>
+                </div>
+              </div>
+            </div>
+            <div id="finishedDateDisplay" class="finished-date-display"></div>
+          </div>
+        </div>
+      </div>
     </div>
   </main>
 

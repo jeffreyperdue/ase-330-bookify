@@ -137,12 +137,19 @@ function processBooksForCategory(rawBooks, category) {
 
   return books.map(b => {
     const img = b.volumeInfo.imageLinks?.thumbnail || b.volumeInfo.imageLinks?.smallThumbnail;
+    const authors = b.volumeInfo.authors || [];
+    const categories = b.volumeInfo.categories || [];
     return {
       title: b.volumeInfo.title,
       img: img,
-      authors: b.volumeInfo.authors || ["Unknown"],
+      authors: authors,
+      author: authors.length > 0 ? authors[0] : "Unknown", // Single author for display
+      genre: categories.length > 0 ? categories[0] : "Unspecified", // First category as genre
+      categories: categories, // Keep all categories
       description: b.volumeInfo.description || "No description.",
-      id: b.id
+      pageCount: b.volumeInfo.pageCount || null,
+      id: b.id,
+      volumeInfo: b.volumeInfo // Keep full volumeInfo for future use
     };
   });
 }
@@ -260,6 +267,9 @@ async function loadAllCategories() {
   
   // Re-enable infinite scroll for all categories
   initializeInfiniteScroll();
+  
+  // Rebuild search cache after all books are loaded
+  buildBooksCache();
 }
 
 
@@ -518,28 +528,191 @@ sidebarButtons.forEach(button => {
   });
 });
 
-// Search functionality
-const searchIcon = document.querySelector('.right-section .fa-search');
-if (searchIcon) {
-  searchIcon.addEventListener('click', () => {
-    const searchTerm = prompt('Enter book title to search:');
-    if (searchTerm) {
-      // Search through all books
-      let foundBook = null;
-      Object.keys(bookData).forEach(category => {
-        bookData[category].forEach(book => {
-          if (book.title.toLowerCase().includes(searchTerm.toLowerCase())) {
-            foundBook = book;
-          }
-        });
-      });
+// ========== LIVE SEARCH FUNCTIONALITY ==========
 
-      if (foundBook) {
-        localStorage.setItem('selectedBook', JSON.stringify(foundBook));
-        window.location.href = 'book.html';
-      } else {
-        alert(`No book found matching "${searchTerm}"`);
+let searchTimeout;
+let allBooksCache = []; // Cache all books for faster searching
+
+// Build cache of all books
+function buildBooksCache() {
+  allBooksCache = [];
+  Object.keys(bookData).forEach(category => {
+    if (bookData[category] && Array.isArray(bookData[category])) {
+      bookData[category].forEach(book => {
+        // Ensure author property is set
+        if (!book.author || book.author === 'Unknown') {
+          if (book.authors && Array.isArray(book.authors) && book.authors.length > 0) {
+            book.author = book.authors[0];
+          }
+        }
+        
+        // Deduplicate by book ID or title
+        const existing = allBooksCache.find(b => 
+          (b.id && book.id && b.id === book.id) || 
+          (b.title && book.title && b.title.toLowerCase() === book.title.toLowerCase())
+        );
+        if (!existing) {
+          allBooksCache.push(book);
+        }
+      });
+    }
+  });
+  console.log(`Search cache built: ${allBooksCache.length} books`);
+}
+
+// Search books from Google Books API
+async function searchBooksFromAPI(query) {
+  if (!query || query.length < 2) return [];
+  
+  try {
+    const results = await fetchGoogleBooks(query, 20);
+    return results.map(b => {
+      const img = b.volumeInfo.imageLinks?.thumbnail || b.volumeInfo.imageLinks?.smallThumbnail;
+      const authors = b.volumeInfo.authors || [];
+      const categories = b.volumeInfo.categories || [];
+      return {
+        title: b.volumeInfo.title,
+        img: img,
+        authors: authors,
+        author: authors.length > 0 ? authors[0] : "Unknown",
+        genre: categories.length > 0 ? categories[0] : "Unspecified",
+        categories: categories,
+        description: b.volumeInfo.description || "No description.",
+        pageCount: b.volumeInfo.pageCount || null,
+        id: b.id,
+        volumeInfo: b.volumeInfo
+      };
+    });
+  } catch (err) {
+    console.error('Error searching books:', err);
+    return [];
+  }
+}
+
+// Filter books from cache
+function filterBooksFromCache(query) {
+  if (!query || query.length < 1) return [];
+  
+  const lowerQuery = query.toLowerCase();
+  return allBooksCache.filter(book => {
+    const titleMatch = book.title?.toLowerCase().includes(lowerQuery);
+    const authorMatch = book.author?.toLowerCase().includes(lowerQuery) ||
+                       (book.authors && book.authors.some(a => a.toLowerCase().includes(lowerQuery)));
+    const genreMatch = book.genre?.toLowerCase().includes(lowerQuery);
+    return titleMatch || authorMatch || genreMatch;
+  });
+}
+
+// Render search results
+function renderSearchResults(books) {
+  const resultsContainer = document.getElementById('searchResults');
+  
+  if (books.length === 0) {
+    resultsContainer.innerHTML = '<div class="search-no-results">No books found</div>';
+    resultsContainer.classList.add('active');
+    return;
+  }
+  
+  resultsContainer.innerHTML = '';
+  
+  books.slice(0, 10).forEach(book => { // Limit to 10 results
+    const resultItem = document.createElement('div');
+    resultItem.className = 'search-result-item';
+    
+    const description = book.description 
+      ? (book.description.length > 100 ? book.description.substring(0, 100) + '...' : book.description)
+      : 'No description available';
+    
+    // Get author name - check multiple sources
+    let authorName = 'Unknown Author';
+    if (book.author && book.author !== 'Unknown') {
+      authorName = book.author;
+    } else if (book.authors && Array.isArray(book.authors) && book.authors.length > 0) {
+      authorName = book.authors[0];
+    } else if (book.volumeInfo && book.volumeInfo.authors && book.volumeInfo.authors.length > 0) {
+      authorName = book.volumeInfo.authors[0];
+    }
+    
+    resultItem.innerHTML = `
+      <img src="${book.img || ''}" alt="${book.title}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'60\' height=\'90\'%3E%3Crect fill=\'%23333\' width=\'60\' height=\'90\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\' fill=\'%23999\' font-size=\'10\'%3ENo Image%3C/text%3E%3C/svg%3E'">
+      <div class="search-result-info">
+        <div class="search-result-title">${book.title}</div>
+        <div class="search-result-author">${authorName}</div>
+        <div class="search-result-description">${description}</div>
+      </div>
+    `;
+    
+    resultItem.addEventListener('click', () => {
+      // Ensure book object has author property set before saving
+      if (!book.author || book.author === 'Unknown') {
+        if (book.authors && book.authors.length > 0) {
+          book.author = book.authors[0];
+        } else if (book.volumeInfo && book.volumeInfo.authors && book.volumeInfo.authors.length > 0) {
+          book.author = book.volumeInfo.authors[0];
+          book.authors = book.volumeInfo.authors;
+        }
       }
+      localStorage.setItem('selectedBook', JSON.stringify(book));
+      window.location.href = 'book.html';
+    });
+    
+    resultsContainer.appendChild(resultItem);
+  });
+  
+  resultsContainer.classList.add('active');
+}
+
+// Handle search input
+const searchInput = document.getElementById('searchInput');
+const searchResults = document.getElementById('searchResults');
+
+if (searchInput) {
+  // Build cache when page loads (after initial load)
+  setTimeout(() => {
+    buildBooksCache();
+  }, 3000); // Wait for books to load
+  
+  searchInput.addEventListener('input', (e) => {
+    const query = e.target.value.trim();
+    
+    clearTimeout(searchTimeout);
+    
+    if (query.length === 0) {
+      searchResults.classList.remove('active');
+      return;
+    }
+    
+    // Show loading state
+    searchResults.innerHTML = '<div class="search-no-results">Searching...</div>';
+    searchResults.classList.add('active');
+    
+    // Debounce search
+    searchTimeout = setTimeout(async () => {
+      // First, search in cached books (instant)
+      const cachedResults = filterBooksFromCache(query);
+      
+      if (cachedResults.length > 0) {
+        renderSearchResults(cachedResults);
+      } else {
+        // If no cached results, search API
+        const apiResults = await searchBooksFromAPI(query);
+        renderSearchResults(apiResults);
+      }
+    }, 300); // 300ms debounce
+  });
+  
+  // Close search results when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+      searchResults.classList.remove('active');
+    }
+  });
+  
+  // Close on escape key
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      searchResults.classList.remove('active');
+      searchInput.blur();
     }
   });
 }
