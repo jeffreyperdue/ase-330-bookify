@@ -47,16 +47,40 @@ function loadShelfList() {
   
   shelves.forEach(shelf => {
     const li = document.createElement('li');
-    li.textContent = shelf.name;
     li.dataset.shelfId = shelf.id;
+    
+    // Create shelf name span
+    const shelfNameSpan = document.createElement('span');
+    shelfNameSpan.textContent = shelf.name;
+    shelfNameSpan.className = 'shelf-name';
+    
+    // Create delete button
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'delete-shelf-btn';
+    deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+    deleteBtn.setAttribute('aria-label', `Delete ${shelf.name}`);
+    deleteBtn.title = 'Delete shelf';
+    
+    // Prevent shelf selection when clicking delete button
+    deleteBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      deleteShelf(shelf.id);
+    });
+    
+    // Add click handler for shelf selection (on the li or name span)
+    li.addEventListener('click', (e) => {
+      // Don't switch if clicking the delete button
+      if (!e.target.closest('.delete-shelf-btn')) {
+        switchToShelf(shelf.id);
+      }
+    });
+    
+    li.appendChild(shelfNameSpan);
+    li.appendChild(deleteBtn);
     
     if (shelf.id.toString() === currentShelfId) {
       li.classList.add('active');
     }
-    
-    li.addEventListener('click', () => {
-      switchToShelf(shelf.id);
-    });
     
     shelfList.appendChild(li);
   });
@@ -108,6 +132,53 @@ function updateShelfName() {
     if (currentShelf) {
       currentShelfName.textContent = currentShelf.name;
     }
+  }
+}
+
+// Delete a shelf
+function deleteShelf(shelfId) {
+  let shelves = JSON.parse(localStorage.getItem('shelves')) || [];
+  
+  // Check if this is the only shelf
+  if (shelves.length <= 1) {
+    alert('You must have at least one shelf. Cannot delete the last remaining shelf.');
+    return;
+  }
+  
+  // Find the shelf to delete
+  const shelfIndex = shelves.findIndex(s => s.id.toString() === shelfId.toString());
+  if (shelfIndex === -1) {
+    alert('Shelf not found');
+    return;
+  }
+  
+  const shelfToDelete = shelves[shelfIndex];
+  
+  // Confirm deletion
+  if (!confirm(`Are you sure you want to delete "${shelfToDelete.name}"? This action cannot be undone.`)) {
+    return;
+  }
+  
+  // Remove the shelf
+  shelves.splice(shelfIndex, 1);
+  localStorage.setItem('shelves', JSON.stringify(shelves));
+  
+  // If the deleted shelf was the current shelf, switch to another shelf
+  const currentShelfId = localStorage.getItem('currentShelfId');
+  if (currentShelfId && currentShelfId.toString() === shelfId.toString()) {
+    // Switch to the first available shelf
+    if (shelves.length > 0) {
+      switchToShelf(shelves[0].id);
+    }
+  }
+  
+  // Reload shelf list
+  loadShelfList();
+  
+  // Reload display if on shelf page
+  if (document.getElementById('book-shelf')) {
+    displayBooks();
+    updateShelfName();
   }
 }
 
@@ -824,6 +895,7 @@ function loadRecommendedBooks() {
 // Make functions available globally
 window.loadShelfList = loadShelfList;
 window.addNewShelf = addNewShelf;
+window.deleteShelf = deleteShelf;
 window.switchToShelf = switchToShelf;
 window.removeBookFromShelf = removeBookFromShelf;
 window.showAddRowOrBookModal = showAddRowOrBookModal;

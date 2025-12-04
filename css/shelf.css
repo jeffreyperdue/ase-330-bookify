@@ -59,6 +59,11 @@
   cursor: pointer;
   transition: all 0.3s ease;
   font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  position: relative;
 }
 
 .playlist-section ul li:hover,
@@ -70,6 +75,50 @@
 .playlist-section ul li.active {
   background-color: #e50914;
   color: #fff;
+}
+
+.shelf-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.delete-shelf-btn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+  opacity: 0.6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  min-height: 24px;
+  flex-shrink: 0;
+}
+
+.playlist-section ul li:hover .delete-shelf-btn,
+.playlist-section ul li.active .delete-shelf-btn {
+  opacity: 1;
+}
+
+.delete-shelf-btn:hover {
+  background-color: rgba(229, 9, 20, 0.3);
+  color: #fff;
+  opacity: 1;
+}
+
+.playlist-section ul li.active .delete-shelf-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.delete-shelf-btn:active {
+  transform: scale(0.95);
 }
 
 .add-shelf-btn {
