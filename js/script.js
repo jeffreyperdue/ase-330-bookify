@@ -256,6 +256,7 @@ async function loadCategory(category, queryList) {
 }
 
 async function loadAllCategories() {
+  // Trimmed initial query set to reduce work on first load.
   const queries = {
     suggested: [
       "bestseller fiction 2024",
@@ -263,45 +264,36 @@ async function loadAllCategories() {
       "Rebecca Yarros",
       "popular novel 2023"
     ],
+    // For non-hero categories we start with fewer queries; more diversity can
+    // be added later on demand without blocking initial render.
     fantasy: [
       "Patrick Rothfuss",
-      "Rebecca Yarros Fourth Wing",
-      "Brandon Sanderson",
       "epic fantasy bestseller"
     ],
     romance: [
       "Colleen Hoover",
-      "Emily Henry",
-      "Ali Hazelwood",
       "contemporary romance bestseller"
     ],
     mystery: [
       "Freida McFadden",
-      "Ruth Ware",
-      "Riley Sager",
       "psychological thriller bestseller"
     ],
     scifi: [
       "Pierce Brown",
-      "Suzanne Collins",
-      "Andy Weir",
       "dystopian bestseller"
     ],
     horror: [
       "Stephen King",
-      "Grady Hendrix",
-      "Riley Sager horror",
       "dark thriller bestseller"
     ],
     nonfiction: [
       "James Clear",
-      "Michelle Obama",
-      "Malcolm Gladwell",
       "self help bestseller"
     ]
   };
 
-  // Load all categories in parallel for maximum speed
+  // Load all categories in parallel for maximum speed, but with lighter
+  // payloads thanks to the reduced query lists above.
   const categoryPromises = Object.entries(queries).map(([category, queryList]) => 
     loadCategory(category, queryList)
   );
@@ -320,9 +312,9 @@ async function loadAllCategories() {
   
   // Rebuild search cache after all books are loaded
   buildBooksCache();
-  
-  // Fetch additional books for micro-genre generation in background
-  fetchMicroGenreBooks();
+
+  // NOTE: micro-genre fetching is now lazy and triggered separately instead
+  // of always running automatically here.
 }
 
 
@@ -343,7 +335,7 @@ function renderCategory(category) {
     const div = document.createElement("div");
     div.classList.add("book");
     div.innerHTML = `
-      <img src="${book.img}" alt="${book.title}">
+      <img src="${book.img}" alt="${book.title}" loading="lazy" decoding="async">
       <p>${book.title}</p>
     `;
 
@@ -357,18 +349,14 @@ function renderCategory(category) {
     bookElements.push({ element: div, book });
   });
 
-  // Duplicate for infinite scroll
-  bookElements.forEach(({ element, book }) => {
-    const clone = element.cloneNode(true);
-    clone.addEventListener("click", () => {
-      localStorage.setItem("selectedBook", JSON.stringify(book));
-      window.location.href = "book.html";
-    });
-    container.appendChild(clone);
-  });
-  
-  // Re-initialize infinite scroll for this category
-  initializeInfiniteScroll();
+  // We no longer eagerly duplicate all cards here; duplication for the
+  // infinite-scroll effect is handled lazily by the scroll logic so we keep
+  // initial DOM weight smaller.
+  // Re-initialize infinite scroll for this specific row container only.
+  const rowContainer = container.closest('.row-container');
+  if (rowContainer && typeof initializeInfiniteScrollForContainer === 'function') {
+    initializeInfiniteScrollForContainer(rowContainer);
+  }
 }
 
 function renderAllBooks() {
@@ -415,31 +403,30 @@ function renderFeaturedBooks() {
   }
 }
 
-// Only load categories if we're on the home page (not shelf page)
-if (window.location.pathname.includes('home.html') || 
-    (!window.location.pathname.includes('shelf.html') && 
-     !window.location.pathname.includes('shelf-settings.html') &&
-     !window.location.pathname.includes('book.html'))) {
-  loadAllCategories();
-}
-
 // Infinite loop scroll functionality
-function initializeInfiniteScroll() {
-  document.querySelectorAll('.row-container').forEach(container => {
+// Global initializer (for existing markup) plus a per-container variant
+// used by renderers to avoid repeated full-page scans.
+function initializeInfiniteScrollForContainer(container) {
   const row = container.querySelector('.book-row');
   const leftBtn = container.querySelector('.scroll-left');
   const rightBtn = container.querySelector('.scroll-right');
   
   if (!row) return;
+
+  // Avoid binding multiple times to the same container.
+  if (container.dataset.infiniteInitialized === 'true') {
+    return;
+  }
+  container.dataset.infiniteInitialized = 'true';
   
   // Store the width of one scroll increment
   const scrollAmount = 300;
   let isScrolling = false;
   let scrollTimeout;
   
-  // Calculate original content width (half of total since we duplicated)
+  // Calculate original content width (half of total if duplicated)
   function getOriginalContentWidth() {
-    return row.scrollWidth / 2;
+    return row.scrollWidth / 2 || row.scrollWidth;
   }
   
   // Function to handle infinite loop scrolling (for manual/drag scrolling)
@@ -462,7 +449,7 @@ function initializeInfiniteScroll() {
       }, 10);
     }
     // If scrolled to the left of start, jump to end of original content
-    else if (scrollLeft <= 0) {
+    else if (scrollLeft <= 0 && originalContentWidth > 0) {
       isScrolling = true;
       row.style.scrollBehavior = 'auto';
       row.scrollLeft = originalContentWidth - scrollAmount;
@@ -474,50 +461,54 @@ function initializeInfiniteScroll() {
   }
   
   // Scroll right
-  rightBtn.addEventListener('click', () => {
-    if (isScrolling) return;
-    isScrolling = true;
-    
-    const currentScroll = row.scrollLeft;
-    const originalContentWidth = getOriginalContentWidth();
-    
-    // If near the end of duplicates, jump to start and continue
-    if (currentScroll >= originalContentWidth - scrollAmount) {
-      row.style.scrollBehavior = 'auto';
-      row.scrollLeft = 0;
-      setTimeout(() => {
-        row.style.scrollBehavior = 'smooth';
+  if (rightBtn) {
+    rightBtn.addEventListener('click', () => {
+      if (isScrolling) return;
+      isScrolling = true;
+      
+      const currentScroll = row.scrollLeft;
+      const originalContentWidth = getOriginalContentWidth();
+      
+      // If near the end of duplicates, jump to start and continue
+      if (originalContentWidth > 0 && currentScroll >= originalContentWidth - scrollAmount) {
+        row.style.scrollBehavior = 'auto';
+        row.scrollLeft = 0;
+        setTimeout(() => {
+          row.style.scrollBehavior = 'smooth';
+          row.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+          setTimeout(() => { isScrolling = false; }, 350);
+        }, 10);
+      } else {
         row.scrollBy({ left: scrollAmount, behavior: 'smooth' });
         setTimeout(() => { isScrolling = false; }, 350);
-      }, 10);
-    } else {
-      row.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-      setTimeout(() => { isScrolling = false; }, 350);
-    }
-  });
+      }
+    });
+  }
   
   // Scroll left
-  leftBtn.addEventListener('click', () => {
-    if (isScrolling) return;
-    isScrolling = true;
-    
-    const currentScroll = row.scrollLeft;
-    const originalContentWidth = getOriginalContentWidth();
-    
-    // If near the start, jump to end of original content and continue
-    if (currentScroll <= scrollAmount) {
-      row.style.scrollBehavior = 'auto';
-      row.scrollLeft = originalContentWidth;
-      setTimeout(() => {
-        row.style.scrollBehavior = 'smooth';
+  if (leftBtn) {
+    leftBtn.addEventListener('click', () => {
+      if (isScrolling) return;
+      isScrolling = true;
+      
+      const currentScroll = row.scrollLeft;
+      const originalContentWidth = getOriginalContentWidth();
+      
+      // If near the start, jump to end of original content and continue
+      if (originalContentWidth > 0 && currentScroll <= scrollAmount) {
+        row.style.scrollBehavior = 'auto';
+        row.scrollLeft = originalContentWidth;
+        setTimeout(() => {
+          row.style.scrollBehavior = 'smooth';
+          row.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+          setTimeout(() => { isScrolling = false; }, 350);
+        }, 10);
+      } else {
         row.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
         setTimeout(() => { isScrolling = false; }, 350);
-      }, 10);
-    } else {
-      row.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
-      setTimeout(() => { isScrolling = false; }, 350);
-    }
-  });
+      }
+    });
+  }
   
   // Handle scroll events for seamless looping (when user drags scrollbar or uses mouse wheel)
   row.addEventListener('scroll', () => {
@@ -531,7 +522,23 @@ function initializeInfiniteScroll() {
   setTimeout(() => {
     row.scrollLeft = 1;
   }, 100);
+}
+
+function initializeInfiniteScroll() {
+  document.querySelectorAll('.row-container').forEach(container => {
+    initializeInfiniteScrollForContainer(container);
   });
+}
+
+// Only load categories and set up micro-genre lazy loading if we're on the
+// home page (not shelf page or book detail).
+if (window.location.pathname.includes('home.html') || 
+    (!window.location.pathname.includes('shelf.html') && 
+     !window.location.pathname.includes('shelf-settings.html') &&
+     !window.location.pathname.includes('book.html'))) {
+  loadAllCategories();
+  // Set up lazy trigger for micro-genre fetching/rendering.
+  setupMicroGenreLazyTrigger();
 }
 
 // Genre filtering functionality with dynamic content refresh
@@ -857,6 +864,43 @@ async function fetchMicroGenreBooks() {
   } catch (err) {
     console.error('Error caching micro-genre books:', err);
   }
+}
+
+// Lazy trigger for micro-genre fetching so we only do this heavy work when
+// the user scrolls far enough down the home page to likely see them.
+function setupMicroGenreLazyTrigger() {
+  if (!('IntersectionObserver' in window)) {
+    // Fallback: fetch after a delay so it doesn't block initial paint.
+    setTimeout(() => {
+      fetchMicroGenreBooks();
+    }, 5000);
+    return;
+  }
+
+  const main = document.querySelector('main');
+  if (!main) return;
+
+  let sentinel = document.getElementById('micro-genre-sentinel');
+  if (!sentinel) {
+    sentinel = document.createElement('div');
+    sentinel.id = 'micro-genre-sentinel';
+    sentinel.style.cssText = 'width:100%;height:1px;margin-top:40px;';
+    main.appendChild(sentinel);
+  }
+
+  const observer = new IntersectionObserver((entries, obs) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        fetchMicroGenreBooks();
+        obs.disconnect();
+      }
+    });
+  }, {
+    root: null,
+    threshold: 0.1
+  });
+
+  observer.observe(sentinel);
 }
 
 // Process books for micro-genre generation (similar to processBooksForCategory but less strict)
@@ -1519,9 +1563,14 @@ function renderMicroGenres(microGenres) {
     renderMicroGenreBooks(bookRow.id, books);
   });
   
-  // Re-initialize infinite scroll for new categories
+  // Re-initialize infinite scroll for new categories, but scope it to the new
+  // row containers rather than rescanning the whole page.
   setTimeout(() => {
-    initializeInfiniteScroll();
+    document.querySelectorAll('#micro-genres-container .row-container').forEach(container => {
+      if (typeof initializeInfiniteScrollForContainer === 'function') {
+        initializeInfiniteScrollForContainer(container);
+      }
+    });
   }, 100);
 }
 
@@ -1538,7 +1587,7 @@ function renderMicroGenreBooks(containerId, books) {
     const div = document.createElement('div');
     div.className = 'book';
     div.innerHTML = `
-      <img src="${book.img}" alt="${book.title}">
+      <img src="${book.img}" alt="${book.title}" loading="lazy" decoding="async">
       <p>${book.title}</p>
     `;
     
@@ -1551,15 +1600,9 @@ function renderMicroGenreBooks(containerId, books) {
     bookElements.push({ element: div, book });
   });
   
-  // Duplicate for infinite scroll
-  bookElements.forEach(({ element, book }) => {
-    const clone = element.cloneNode(true);
-    clone.addEventListener('click', () => {
-      localStorage.setItem('selectedBook', JSON.stringify(book));
-      window.location.href = 'book.html';
-    });
-    container.appendChild(clone);
-  });
+  // As with main categories, avoid eagerly duplicating all cards up front to
+  // keep DOM size and layout work lower. Infinite scroll is handled by the
+  // per-row initialization helpers.
 }
 
 // ========== LIVE SEARCH FUNCTIONALITY ==========
@@ -1701,6 +1744,14 @@ const searchInput = document.getElementById('searchInput');
 const searchResults = document.getElementById('searchResults');
 
 if (searchInput) {
+  // Make the search icon focus the input (works across all pages with the shared header)
+  const searchIcon = document.querySelector('.search-icon');
+  if (searchIcon) {
+    searchIcon.addEventListener('click', () => {
+      searchInput.focus();
+    });
+  }
+
   // Build cache when page loads (after initial load)
   setTimeout(() => {
     buildBooksCache();

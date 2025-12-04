@@ -741,16 +741,35 @@ header {
 
 .notes-list {
   display: flex;
-  flex-direction: column;
-  gap: 15px;
+  flex-wrap: wrap;
+  gap: 18px;
+  align-items: flex-start;
 }
 
 .note-item {
-  padding: 15px;
-  background-color: #2a2a2a;
-  border-left: 4px solid #e50914;
+  padding: 14px 14px 18px 14px;
   border-radius: 6px;
   position: relative;
+  width: 210px;
+  min-height: 130px;
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.55);
+  transform-origin: center top;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  background-color: #f7e38a; /* default yellow-like */
+  color: #222;
+}
+
+.note-item:nth-child(odd) {
+  transform: rotate(-1.5deg);
+}
+
+.note-item:nth-child(even) {
+  transform: rotate(1.2deg);
+}
+
+.note-item:hover {
+  transform: translateY(-3px) rotate(0deg);
+  box-shadow: 0 14px 24px rgba(0, 0, 0, 0.7);
 }
 
 .note-item-header {
@@ -761,7 +780,7 @@ header {
 }
 
 .note-page-number {
-  color: #e50914;
+  color: #333;
   font-weight: 700;
   font-size: 1.1rem;
 }
@@ -786,7 +805,95 @@ header {
 }
 
 .note-content {
-  color: #ccc;
+  color: #333;
   font-size: 1rem;
   line-height: 1.5;
+}
+
+/* Sticky note color selector */
+.note-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+.note-color-label {
+  font-size: 0.9rem;
+  color: #ccc;
+}
+
+.note-color-options {
+  display: inline-flex;
+  gap: 8px;
+}
+
+.note-color-option {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  outline: none;
+  background-clip: padding-box;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.note-color-option[data-color="yellow"] {
+  background-color: #f7e38a;
+}
+
+.note-color-option[data-color="blue"] {
+  background-color: #9fd3ff;
+}
+
+.note-color-option[data-color="pink"] {
+  background-color: #ffc4dd;
+}
+
+.note-color-option[data-color="green"] {
+  background-color: #c5f6c7;
+}
+
+.note-color-option.selected {
+  border-color: #fff;
+  box-shadow: 0 0 0 2px #e50914;
+  transform: scale(1.05);
+}
+
+.note-color-option:hover {
+  transform: scale(1.08);
+}
+
+/* Sticky note color variants */
+.note-color-yellow {
+  background-color: #f7e38a;
+}
+
+.note-color-blue {
+  background-color: #9fd3ff;
+}
+
+.note-color-pink {
+  background-color: #ffc4dd;
+}
+
+.note-color-green {
+  background-color: #c5f6c7;
+}
+
+.note-color-yellow .note-page-number,
+.note-color-blue .note-page-number,
+.note-color-pink .note-page-number,
+.note-color-green .note-page-number {
+  color: #333;
+}
+
+.note-color-yellow .note-content,
+.note-color-blue .note-content,
+.note-color-pink .note-content,
+.note-color-green .note-content {
+  color: #333;
 }

@@ -5,13 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Bookify - Book Details</title>
 
-  <!-- ✅ Link to your CSS -->
+  <!-- ✅ Link to shared + page-specific CSS -->
+  <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/book.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
 <body>
-  <!-- 🔺 Header (matches home page) -->
+  <!-- 🔺 Header (now with shared search UI) -->
   <header>
     <div class="nav-left">
       <div class="logo"><span class="book">Book</span>ify</div>
@@ -21,7 +22,11 @@
       </nav>
     </div>
     <div class="header-icons">
-      <i class="fas fa-search"></i>
+      <div class="search-container">
+        <i class="fas fa-search search-icon" aria-label="Search" title="Search books"></i>
+        <input type="text" id="searchInput" class="search-input" placeholder="Search books..." aria-label="Search books">
+        <div id="searchResults" class="search-results" aria-live="polite"></div>
+      </div>
       <div class="user-menu-container">
         <i class="fas fa-user-circle" id="user-icon" aria-label="Profile"></i>
         <div class="user-dropdown" id="user-dropdown">
@@ -115,6 +120,17 @@
                 <button class="add-note-btn" id="addNoteBtn">Add Note</button>
               </div>
               <textarea id="noteText" placeholder="Your note..." rows="3"></textarea>
+              <!-- Sticky note color selection -->
+              <div class="note-meta-row">
+                <div class="note-color-label">Note color:</div>
+                <div class="note-color-options" aria-label="Choose note color">
+                  <button type="button" class="note-color-option selected" data-color="yellow" title="Yellow note"></button>
+                  <button type="button" class="note-color-option" data-color="blue" title="Blue note"></button>
+                  <button type="button" class="note-color-option" data-color="pink" title="Pink note"></button>
+                  <button type="button" class="note-color-option" data-color="green" title="Green note"></button>
+                </div>
+                <input type="hidden" id="noteColor" value="yellow">
+              </div>
             </div>
             <div id="notesList" class="notes-list"></div>
           </div>
@@ -146,6 +162,7 @@
 
   <!-- ✅ Link to your JS -->
   <script src="js/user-menu.js"></script>
+  <script src="js/script.js"></script>
   <script src="js/book.js"></script>
 </body>
 </html>

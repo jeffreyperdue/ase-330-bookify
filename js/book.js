@@ -760,9 +760,10 @@ function renderNotes(notes) {
     // Find original index in unsorted array
     const originalIndex = notes.findIndex(n => n.page === note.page && n.text === note.text && n.date === note.date);
     const noteIndex = originalIndex >= 0 ? originalIndex : displayIndex;
+    const color = note.color || 'yellow';
     
     const noteItem = document.createElement('div');
-    noteItem.className = 'note-item';
+    noteItem.className = `note-item note-color-${color}`;
     noteItem.innerHTML = `
       <div class="note-item-header">
         <span class="note-page-number">Page ${note.page}</span>
@@ -795,6 +796,8 @@ function deleteNote(index) {
 document.getElementById('addNoteBtn').addEventListener('click', () => {
   const pageNumber = parseInt(document.getElementById('notePageNumber').value);
   const noteText = document.getElementById('noteText').value.trim();
+  const noteColorInput = document.getElementById('noteColor');
+  const selectedColor = (noteColorInput && noteColorInput.value) ? noteColorInput.value : 'yellow';
   
   if (!pageNumber || pageNumber < 1) {
     alert('Please enter a valid page number');
@@ -812,7 +815,8 @@ document.getElementById('addNoteBtn').addEventListener('click', () => {
   notes.push({
     page: pageNumber,
     text: noteText,
-    date: new Date().toISOString()
+    date: new Date().toISOString(),
+    color: selectedColor
   });
   
   renderNotes(notes);
@@ -824,3 +828,22 @@ document.getElementById('addNoteBtn').addEventListener('click', () => {
   
   alert('Note added!');
 });
+
+// Initialize sticky note color selector
+(function initializeNoteColorPicker() {
+  const colorInput = document.getElementById('noteColor');
+  const colorButtons = document.querySelectorAll('.note-color-option');
+  
+  if (!colorInput || !colorButtons.length) return;
+  
+  colorButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      const color = button.dataset.color || 'yellow';
+      colorInput.value = color;
+      
+      // Update selected state
+      colorButtons.forEach(btn => btn.classList.remove('selected'));
+      button.classList.add('selected');
+    });
+  });
+})();
