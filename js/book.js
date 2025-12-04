@@ -873,3 +873,59 @@ document.getElementById('addNoteBtn').addEventListener('click', () => {
     });
   });
 })();
+
+const currentPageInput = document.getElementById('currentPage');
+const totalPagesInput = document.getElementById('totalPagesInput');
+const progressBar = document.getElementById('progressBar');
+const progressPercentage = document.getElementById('progressPercentage');
+const savePageBtn = document.getElementById('savePageBtn');
+const saveTotalPagesBtn = document.getElementById('saveTotalPagesBtn');
+
+// Update progress bar based on current page
+function updateProgressBar(current) {
+  const pageCount = parseInt(localStorage.getItem(`totalPages_${book.title}`)) || book.pageCount || 1;
+  if (!current || current < 0) current = 0;
+  if (current > pageCount) current = pageCount;
+
+  const percent = Math.round((current / pageCount) * 100);
+  progressBar.style.width = `${percent}%`;
+  progressPercentage.textContent = `${percent}%`;
+}
+
+// Load saved progress and total page count
+function loadProgress() {
+  const dataKey = getUserBookDataKey();
+  const userData = JSON.parse(localStorage.getItem(dataKey)) || {};
+
+  currentPageInput.value = userData.currentPage || 1;
+  totalPagesInput.value = parseInt(localStorage.getItem(`totalPages_${book.title}`)) || book.pageCount || 1;
+
+  updateProgressBar(userData.currentPage || 1);
+}
+
+// Save current page
+savePageBtn.addEventListener('click', () => {
+  const current = parseInt(currentPageInput.value) || 0;
+  updateProgressBar(current);
+
+  const dataKey = getUserBookDataKey();
+  const userData = JSON.parse(localStorage.getItem(dataKey)) || {};
+  userData.currentPage = current;
+  localStorage.setItem(dataKey, JSON.stringify(userData));
+
+  alert('Progress saved!');
+});
+
+// Save total page count overwrite
+saveTotalPagesBtn.addEventListener('click', () => {
+  const total = parseInt(totalPagesInput.value) || 1;
+  if (total < 1) return alert('Enter a valid page count');
+
+  localStorage.setItem(`totalPages_${book.title}`, total);
+  updateProgressBar(parseInt(currentPageInput.value) || 1);
+  alert('Total page count updated!');
+});
+
+// Initialize progress bar on page load
+loadProgress();
+

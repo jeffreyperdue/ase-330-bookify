@@ -658,6 +658,130 @@ header {
   border-left: 4px solid #4CAF50;
 }
 
+/* ===== Reading Progress Section ===== */
+.book-progress-section h3 {
+  color: #fff;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.progress-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.progress-input-row label {
+  font-size: 0.9rem;
+  color: #fff;
+  min-width: 80px;
+}
+
+.progress-input-row input[type="number"] {
+  width: 100px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #555;
+  background-color: #222;
+  color: #fff;
+  font-size: 0.9rem;
+  -moz-appearance: textfield; /* Remove arrow in Firefox */
+}
+
+.progress-input-row input::-webkit-outer-spin-button,
+.progress-input-row input::-webkit-inner-spin-button {
+  -webkit-appearance: none; /* Remove arrows in Chrome/Safari */
+  margin: 0;
+}
+
+.progress-input-row #progressPercentage {
+  font-size: 0.9rem;
+  color: #fff;
+  min-width: 35px;
+  text-align: right;
+}
+
+.progress-bar-container {
+  width: 100%;
+  height: 18px;
+  background-color: #2a2a2a;
+  border-radius: 9px;
+  overflow: hidden;
+  margin-top: 6px;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #e50914, #ff4500);
+  border-radius: 9px;
+  transition: width 0.3s ease;
+}
+
+.save-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  background-color: #e50914;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.save-btn:hover {
+  background-color: #ff4500;
+}
+
+/* ---------- Overwrite Page Count Section ---------- */
+.overwrite-pagecount {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px; /* spacing below progress bar */
+}
+
+.overwrite-pagecount label {
+  font-size: 0.9rem;
+  color: #fff;
+  min-width: 80px;
+}
+
+.overwrite-pagecount input[type="number"] {
+  width: 100px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #555;
+  background-color: #222;
+  color: #fff;
+  font-size: 0.9rem;
+  -moz-appearance: textfield; /* remove Firefox arrows */
+}
+
+.overwrite-pagecount input::-webkit-outer-spin-button,
+.overwrite-pagecount input::-webkit-inner-spin-button {
+  -webkit-appearance: none; /* remove Chrome/Safari arrows */
+  margin: 0;
+}
+
+.overwrite-pagecount .save-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  background-color: #e50914;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.overwrite-pagecount .save-btn:hover {
+  background-color: #ff4500;
+}
+
 /* Page Notes Section */
 .book-notes-section {
   padding: 25px;

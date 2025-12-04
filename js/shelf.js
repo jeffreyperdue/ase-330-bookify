@@ -9,32 +9,73 @@ function loadShelfList() {
   let shelves = JSON.parse(localStorage.getItem('shelves')) || [];
   
   // If no shelves exist, create default shelf
+  // If no shelves exist, create default shelves
   if (shelves.length === 0) {
-    shelves = [{
-      id: 1,
-      name: 'Custom Shelf #1',
-      books: [],
-      rows: [{
+    shelves = [
+      {
         id: 1,
-        books: []
-      }],
-      settings: {
-        background: "#141414",
-        backgroundType: "color",
-        backgroundImage: null,
-        backgroundGradient: null,
-        texture: "none",
-        color: "#8B4513",
-        decorations: [],
-        bookendBackground: {
-          show: true,
-          color: "#654321",
-          opacity: 1
+        name: 'Read',
+        books: [],
+        rows: [{ id: 1, books: [] }],
+        settings: {
+          background: "#141414",
+          backgroundType: "color",
+          backgroundImage: null,
+          backgroundGradient: null,
+          texture: "none",
+          color: "#8B4513",
+          decorations: [],
+          bookendBackground: {
+            show: true,
+            color: "#654321",
+            opacity: 1
+          }
+        }
+      },
+      {
+        id: 2,
+        name: 'Want to Read',
+        books: [],
+        rows: [{ id: 1, books: [] }],
+        settings: {
+          background: "#141414",
+          backgroundType: "color",
+          backgroundImage: null,
+          backgroundGradient: null,
+          texture: "none",
+          color: "#8B4513",
+          decorations: [],
+          bookendBackground: {
+            show: true,
+            color: "#654321",
+            opacity: 1
+          }
+        }
+      },
+      {
+        id: 3,
+        name: 'Reading',
+        books: [],
+        rows: [{ id: 1, books: [] }],
+        settings: {
+          background: "#141414",
+          backgroundType: "color",
+          backgroundImage: null,
+          backgroundGradient: null,
+          texture: "none",
+          color: "#8B4513",
+          decorations: [],
+          bookendBackground: {
+            show: true,
+            color: "#654321",
+            opacity: 1
+          }
         }
       }
-    }];
+    ];
+
     localStorage.setItem('shelves', JSON.stringify(shelves));
-    localStorage.setItem('currentShelfId', '1');
+    localStorage.setItem('currentShelfId', '1'); // Start user on "Read"
   } else {
     // Migrate all shelves to row-based structure
     shelves = shelves.map(shelf => migrateShelfToRows(shelf));
@@ -908,3 +949,71 @@ if (document.readyState === 'loading') {
   initShelf();
 }
 
+function resetToDefaultShelves() {
+  const defaultShelves = [
+    {
+      id: 1,
+      name: 'Read',
+      books: [],
+      rows: [{ id: 1, books: [] }],
+      settings: {
+        background: "#141414",
+        backgroundType: "color",
+        backgroundImage: null,
+        backgroundGradient: null,
+        texture: "none",
+        color: "#8B4513",
+        decorations: [],
+        bookendBackground: {
+          show: true,
+          color: "#654321",
+          opacity: 1
+        }
+      }
+    },
+    {
+      id: 2,
+      name: 'Want to Read',
+      books: [],
+      rows: [{ id: 1, books: [] }],
+      settings: {
+        background: "#141414",
+        backgroundType: "color",
+        backgroundImage: null,
+        backgroundGradient: null,
+        texture: "none",
+        color: "#8B4513",
+        decorations: [],
+        bookendBackground: {
+          show: true,
+          color: "#654321",
+          opacity: 1
+        }
+      }
+    },
+    {
+      id: 3,
+      name: 'Reading',
+      books: [],
+      rows: [{ id: 1, books: [] }],
+      settings: {
+        background: "#141414",
+        backgroundType: "color",
+        backgroundImage: null,
+        backgroundGradient: null,
+        texture: "none",
+        color: "#8B4513",
+        decorations: [],
+        bookendBackground: {
+          show: true,
+          color: "#654321",
+          opacity: 1
+        }
+      }
+    }
+  ];
+
+  localStorage.setItem('shelves', JSON.stringify(defaultShelves));
+  localStorage.setItem('currentShelfId', '1');
+  location.reload();
+}

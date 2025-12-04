@@ -153,6 +153,30 @@
                 </div>
               </div>
             </div>
+            <!-- Reading Progress Section -->
+            <div class="book-progress-section">
+              <h3>Reading Progress</h3>
+              <div class="progress-input-row">
+                <!-- Current page input -->
+                <label for="currentPage">Current Page:</label>
+                <input type="number" id="currentPage" min="1" value="1">
+                <button id="savePageBtn" class="save-btn">Save</button>
+
+                <!-- Progress percentage -->
+                <span id="progressPercentage">0%</span>
+              </div>
+
+              <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar"></div>
+              </div>
+
+              <!-- NEW: User can overwrite total page count -->
+              <div class="overwrite-pagecount">
+                <label for="totalPagesInput">Page Count?</label>
+                <input type="number" id="totalPagesInput" min="1" value="">
+                <button id="saveTotalPagesBtn" class="save-btn">Overwrite Page Count</button>
+              </div>
+            </div>
             <div id="finishedDateDisplay" class="finished-date-display"></div>
           </div>
         </div>

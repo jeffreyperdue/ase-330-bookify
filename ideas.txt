@@ -11,8 +11,10 @@
 MUST DO:
 
 Cley:
+DONE:
 3 default bookshelves (Want to read, read, reading) these shelves will be automatically applied
 add progress bar based on user input of current page they are on (google books api has a pagecount attribute)
+TO DO:
 user account page can have stats like how many books they have total or in each shelf, maybe how many pages theyve read this week or total
 
 Jeff:

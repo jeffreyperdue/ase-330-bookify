@@ -144,6 +144,29 @@
   color: #e50914;
 }
 
+.reset-shelves-btn {
+  background-color: #2a2a2a;
+  color: #fff;
+  border: 2px dashed #444;
+  border-radius: 5px;
+  padding: 12px 15px;
+  margin-top: 10px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  justify-content: center;
+}
+
+.reset-shelves-btn:hover {
+  background-color: #333;
+  border-color: #e50914;
+  color: #e50914;
+}
+
 .recommendations ul li {
   display: flex;
   align-items: center;
