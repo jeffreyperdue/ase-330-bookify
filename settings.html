@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings</title>
+
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/settings.css">
+
+  <!-- Icons -->
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <script defer src="js/userMenu.js"></script>
+  <script defer src="js/settings.js"></script>
+</head>
+
+<body>
+
+<header>
+  <div class="left-section">
+    <h1 class="logo">
+      <span class="book">Book</span><span class="ify">ify</span>
+    </h1>
+    <nav>
+      <a href="home.html">Home</a>
+      <a href="shelf.html">My Shelves</a>
+      <a href="settings.html" class="active">Settings</a>
+    </nav>
+  </div>
+
+  <div class="right-section">
+    <i class="fas fa-search"></i>
+
+    <div class="user-menu-container">
+      <i class="fas fa-user-circle" id="user-icon"></i>
+
+      <div class="user-dropdown" id="user-dropdown">
+        <div class="user-info">
+          <span id="user-email">User</span>
+        </div>
+        <button class="sign-out-btn" onclick="signOut()">Sign Out</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- SETTINGS PAGE -->
+<div class="settings-container">
+
+  <h1>Settings</h1>
+
+  <!-- ACCOUNT SETTINGS -->
+  <div class="settings-section-title">Account Settings</div>
+
+  <!-- Change Email -->
+  <div class="settings-option">
+    <label>Email</label>
+    <button class="settings-btn btn-edit" onclick="openEmailChange()">Change</button>
+  </div>
+
+  <!-- Delete Account -->
+  <div class="settings-option">
+    <label>Delete Account</label>
+    <button class="settings-btn btn-danger" onclick="deleteAccount()">Delete</button>
+  </div>
+
+  <!-- APPEARANCE -->
+  <div class="settings-section-title" style="margin-top: 35px;">Appearance</div>
+
+  <!-- Light Mode Toggle -->
+  <div class="settings-option">
+    <label>Light Mode</label>
+
+    <label class="toggle">
+      <input type="checkbox" id="theme-toggle">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+</div>
+
+
+<!-- Change Email Modal -->
+<div id="email-modal" class="modal hidden">
+  <div class="modal-content">
+    <h2>Change Email</h2>
+    <input type="email" id="new-email" placeholder="Enter new email">
+    
+    <div class="modal-buttons">
+      <button class="settings-btn btn-edit" onclick="saveEmail()">Save</button>
+      <button class="settings-btn" onclick="closeEmailChange()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

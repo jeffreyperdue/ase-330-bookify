@@ -1,0 +1,269 @@
+/* Import global styles */
+@import url('style.css');
+
+/* ---- PAGE LAYOUT ---- */
+.settings-container {
+    max-width: 900px;
+    margin: 120px auto 40px auto;
+    padding: 25px;
+    background: var(--card-bg);
+    border-radius: 16px;
+    box-shadow: 0px 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Title */
+.settings-container h1 {
+    font-size: 32px;
+    margin-bottom: 25px;
+    color: var(--text-color);
+}
+
+/* Section headers */
+.settings-section-title {
+    font-size: 22px;
+    margin: 25px 0 10px;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+/* Options container */
+.settings-option {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.settings-option:last-child {
+    border-bottom: none;
+}
+
+.settings-option label {
+    font-size: 18px;
+    color: var(--text-color);
+}
+
+/* ---- THEME PICKER ---- */
+.theme-color-picker {
+    display: flex;
+    gap: 12px;
+}
+
+.theme-swatch {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: 0.2s;
+}
+
+/* Swatch hover effect */
+.theme-swatch:hover {
+    transform: scale(1.15);
+}
+
+/* Color options */
+.theme-red    { background: #d32f2f; }
+.theme-blue   { background: #1565c0; }
+.theme-green  { background: #2e7d32; }
+.theme-white  { background: #eeeeee; border: 1px solid #ccc; }
+
+/* Selected color outline */
+.theme-selected {
+    border-color: var(--accent-color);
+}
+
+/* ---- TOGGLE SWITCH ---- */
+.toggle {
+    position: relative;
+    width: 50px;
+    height: 26px;
+}
+
+.toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: var(--border-color);
+    transition: 0.3s;
+    border-radius: 30px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 4px;
+    bottom: 4px;
+    background: var(--card-bg);
+    border-radius: 50%;
+    transition: 0.3s;
+}
+
+/* Checked state */
+.toggle input:checked + .slider {
+    background-color: var(--accent-color);
+}
+
+.toggle input:checked + .slider:before {
+    transform: translateX(24px);
+}
+
+/* BUTTON BASE */
+.settings-btn {
+  padding: 10px 20px;
+  background: #d63031;             /* Red theme */
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  transition: 0.25s ease;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+}
+
+.settings-btn:hover {
+  background: #b02526;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 14px rgba(0,0,0,0.25);
+}
+
+.settings-btn:active {
+  transform: scale(0.95);
+}
+
+/* EDIT BUTTON (blue accent) */
+.btn-edit {
+  background: #0984e3;
+}
+
+.btn-edit:hover {
+  background: #086fcc;
+}
+
+/* DANGER BUTTON (delete) */
+.btn-danger {
+  background: #c0392b;
+}
+
+.btn-danger:hover {
+  background: #992d22;
+}
+
+/* TOGGLE SWITCH */
+.toggle {
+  position: relative;
+  width: 52px;
+  height: 28px;
+  display: inline-block;
+}
+
+.toggle input {
+  display: none;
+}
+
+.slider {
+  position: absolute;
+  background: #888;
+  border-radius: 40px;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  transition: 0.25s;
+}
+
+.slider:before {
+  content: "";
+  position: absolute;
+  height: 22px;
+  width: 22px;
+  border-radius: 50%;
+  left: 3px;
+  bottom: 3px;
+  background: white;
+  transition: 0.25s;
+}
+
+input:checked + .slider {
+  background: #d63031;
+}
+
+input:checked + .slider:before {
+  transform: translateX(24px);
+}
+
+/* MODAL */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  width: 330px;
+  padding: 25px;
+  background: #1a1a1a;
+  border-radius: 16px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.35);
+  text-align: center;
+  color: white;
+}
+
+.modal-content input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  margin: 10px 0 20px;
+  font-size: 16px;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: space-between;
+}
+
+/* LIGHT MODE BUTTON COLORS */
+body.light-mode .modal-content {
+  background: #ffffff;
+  color: #333;
+}
+
+body.light-mode .settings-btn {
+  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+}
+
+body.light-mode .btn-edit {
+  background: #0984e3;
+}
+
+body.light-mode .btn-danger {
+  background: #c0392b;
+}
+
+body.light-mode .slider {
+  background: #a5a5a5;
+}
+
+body.light-mode input:checked + .slider {
+  background: #d63031;
+}
+
+.hidden {
+  display: none !important;
+}

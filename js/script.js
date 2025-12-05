@@ -1802,4 +1802,10 @@ if (searchInput) {
   });
 }
 
+const userIcon = document.getElementById("user-icon");
+
+userIcon.addEventListener("click", (e) => {
+  e.stopPropagation(); // prevents hover issues
+  window.location.href = "account.html";
+});
 

@@ -3,27 +3,53 @@
 // Load user email on page load
 function loadUserInfo() {
   const userEmail = localStorage.getItem('userEmail') || 'Guest';
+
+  // Load personal user data from localStorage
+  const userDataKey = `userData-${userEmail}`;
+  let userData = JSON.parse(localStorage.getItem(userDataKey)) || {
+    email: userEmail,
+    name: "New User",
+    bio: "No bio yet...",
+  };
+
+  // Save back (ensures structure exists)
+  localStorage.setItem(userDataKey, JSON.stringify(userData));
+
+  // Update UI
   const userEmailElements = document.querySelectorAll('#user-email');
-  
-  userEmailElements.forEach(element => {
-    if (element) {
-      element.textContent = userEmail;
-    }
-  });
+  userEmailElements.forEach(el => el.textContent = userData.email);
+
+  const nameEl = document.getElementById("account-name");
+  const bioEl = document.getElementById("account-bio");
+
+  if (nameEl) nameEl.textContent = userData.name;
+  if (bioEl) bioEl.textContent = userData.bio;
 }
+
+function saveAccountChanges() {
+  const userEmail = localStorage.getItem('userEmail');
+  const userDataKey = `userData-${userEmail}`;
+
+  let userData = JSON.parse(localStorage.getItem(userDataKey)) || {};
+
+  userData.name = document.getElementById("account-name-input").value;
+  userData.bio = document.getElementById("account-bio-input").value;
+
+  localStorage.setItem(userDataKey, JSON.stringify(userData));
+
+  alert("Profile updated!");
+}
+
 
 // Sign out function
 function signOut() {
-  // Clear user session data
+  // DO NOT delete userData-email files
   localStorage.removeItem('currentUser');
   localStorage.removeItem('userEmail');
-  
-  // Optionally clear all data or keep shelf data
-  // localStorage.clear(); // Uncomment if you want to clear everything
-  
-  // Redirect to login page
+
   window.location.href = 'index.html';
 }
+
 
 // Initialize user info when DOM is loaded
 if (document.readyState === 'loading') {
